@@ -46,6 +46,12 @@ final class KillTokenCommandTest {
                 .sum();
     }
 
+    private int tokensInInventory(final PlayerMock player) {
+        return player.getInventory().all(Material.NETHER_STAR).values().stream()
+                .mapToInt(ItemStack::getAmount)
+                .sum();
+    }
+
     @Test
     @DisplayName("/killtoken set uses the main-hand item as the new currency")
     void setUsesMainHandItem() {
@@ -71,16 +77,15 @@ final class KillTokenCommandTest {
     }
 
     @Test
-    @DisplayName("/killtoken give hands tokens to the executing player by default")
+    @DisplayName("/killtoken give places tokens into the executing player's inventory")
     void giveDefaultsToSelf() {
         final PlayerMock player = server.addPlayer();
         player.setOp(true);
 
         player.performCommand("killtoken give");
 
-        assertEquals(1, tokensOnFloor());
-        assertFalse(player.getInventory().contains(Material.NETHER_STAR),
-                "tokens are dropped on the floor, never placed into inventories");
+        assertEquals(1, tokensInInventory(player));
+        assertEquals(0, tokensOnFloor());
     }
 
     @Test
@@ -92,8 +97,8 @@ final class KillTokenCommandTest {
 
         sender.performCommand("killtoken give " + target.getName() + " 3");
 
-        assertEquals(3, tokensOnFloor());
-        assertFalse(target.getInventory().contains(Material.NETHER_STAR));
+        assertEquals(3, tokensInInventory(target));
+        assertEquals(0, tokensOnFloor());
     }
 
     @Test
@@ -103,6 +108,36 @@ final class KillTokenCommandTest {
 
         server.dispatchCommand(server.getConsoleSender(), "killtoken give " + target.getName() + " 2");
 
+        assertEquals(2, tokensInInventory(target));
+    }
+
+    @Test
+    @DisplayName("/killtoken give merges with existing stacks in the inventory")
+    void giveMergesWithExistingStacks() {
+        final PlayerMock player = server.addPlayer();
+        player.setOp(true);
+
+        player.performCommand("killtoken give " + player.getName() + " 10");
+        player.performCommand("killtoken give " + player.getName() + " 10");
+
+        assertEquals(20, tokensInInventory(player), "stacks must merge, not overwrite");
+    }
+
+    @Test
+    @DisplayName("/killtoken give drops overflow at the feet instead of losing it")
+    void giveDropsOverflowOnFloor() {
+        final PlayerMock player = server.addPlayer();
+        player.setOp(true);
+        // MockBukkit scans all 41 slots (storage + armor + offhand) when
+        // adding items, so fill every slot to force an overflow.
+        final ItemStack filler = new ItemStack(Material.DIRT, 64);
+        for (int slot = 0; slot < 41; slot++) {
+            player.getInventory().setItem(slot, filler.clone());
+        }
+
+        player.performCommand("killtoken give " + player.getName() + " 2");
+
+        assertEquals(0, tokensInInventory(player));
         assertEquals(2, tokensOnFloor());
     }
 
@@ -165,17 +200,17 @@ final class KillTokenCommandTest {
     }
 
     @Test
-    @DisplayName("/killtoken giveblock drops a compressed block to the executor by default")
+    @DisplayName("/killtoken giveblock places a compressed block into the executor's inventory")
     void giveBlockDefaultsToSelf() {
         final PlayerMock player = server.addPlayer();
         player.setOp(true);
 
         player.performCommand("killtoken giveblock");
 
-        final List<ItemStack> items = itemsOnFloor();
-        assertEquals(1, items.size());
-        assertEquals(Material.QUARTZ_BLOCK, items.get(0).getType());
-        assertEquals(1, items.get(0).getAmount());
+        final ItemStack block = player.getInventory().getItem(0);
+        assertEquals(Material.QUARTZ_BLOCK, block.getType());
+        assertEquals(1, block.getAmount());
+        assertEquals(0, itemsOnFloor().size());
     }
 
     @Test
@@ -187,10 +222,10 @@ final class KillTokenCommandTest {
 
         sender.performCommand("killtoken giveblock " + target.getName() + " 3");
 
-        final List<ItemStack> items = itemsOnFloor();
-        assertEquals(1, items.size());
-        assertEquals(Material.QUARTZ_BLOCK, items.get(0).getType());
-        assertEquals(3, items.get(0).getAmount());
+        final ItemStack block = target.getInventory().getItem(0);
+        assertEquals(Material.QUARTZ_BLOCK, block.getType());
+        assertEquals(3, block.getAmount());
+        assertEquals(0, itemsOnFloor().size());
     }
 
     @Test
@@ -204,6 +239,7 @@ final class KillTokenCommandTest {
                 + " " + (KillTokenCommand.MAX_BLOCK_GIVE_AMOUNT + 1));
         player.performCommand("killtoken giveblock " + player.getName() + " bananas");
 
+        assertFalse(player.getInventory().contains(Material.QUARTZ_BLOCK));
         assertEquals(0, itemsOnFloor().size());
     }
 
@@ -215,6 +251,7 @@ final class KillTokenCommandTest {
 
         player.performCommand("killtoken giveblock");
 
+        assertFalse(player.getInventory().contains(Material.QUARTZ_BLOCK));
         assertEquals(0, itemsOnFloor().size());
     }
 

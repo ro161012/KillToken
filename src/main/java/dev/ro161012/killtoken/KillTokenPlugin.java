@@ -41,6 +41,7 @@ public class KillTokenPlugin extends JavaPlugin {
         loadCurrencyItem();
 
         getServer().getPluginManager().registerEvents(new KillListener(this), this);
+        getServer().getPluginManager().registerEvents(new CompressedBlockListener(), this);
 
         final PluginCommand command = getCommand("killtoken");
         if (command != null) {

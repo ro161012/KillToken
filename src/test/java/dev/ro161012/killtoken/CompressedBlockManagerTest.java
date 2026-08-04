@@ -1,6 +1,7 @@
 package dev.ro161012.killtoken;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -63,5 +64,16 @@ final class CompressedBlockManagerTest {
         assertEquals(2, lines.size());
         assertEquals("A compact block of Kill Tokens.", lines.get(0));
         assertTrue(lines.get(1).startsWith("Value: 64 Kill Tokens"));
+    }
+
+    @Test
+    @DisplayName("compressed block has a hidden enchantment for the enchanted glint")
+    void compressedBlockIsEnchanted() {
+        final ItemStack block = plugin.getCompressedBlockManager().createCompressedBlock();
+        final org.bukkit.inventory.meta.ItemMeta meta = block.getItemMeta();
+
+        assertFalse(meta.getEnchants().isEmpty(), "block must carry an enchantment for the glint");
+        assertTrue(meta.hasItemFlag(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS),
+                "enchantment must be hidden so the tooltip stays plain");
     }
 }

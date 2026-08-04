@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Locale;
 
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -22,6 +24,9 @@ public final class CompressedBlockManager {
 
     /** Tokens stored in one Compressed Kill Token Block. */
     public static final int COMPRESS_RATIO = 64;
+
+    /** Plain display name of the compressed block (no color codes). */
+    public static final String DISPLAY_NAME = "Compressed Kill Token Block";
 
     /** Configuration section for the compressed block feature. */
     public static final String CONFIG_SECTION = "compressed-blocks";
@@ -48,10 +53,13 @@ public final class CompressedBlockManager {
                 material("compressed-block-material", Material.QUARTZ_BLOCK));
         final ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(KillTokenPlugin.color("&6Compressed Kill Token Block"));
+            meta.setDisplayName(KillTokenPlugin.color("&6" + DISPLAY_NAME));
             meta.setLore(List.of(
                     KillTokenPlugin.color("&7A compact block of Kill Tokens."),
                     KillTokenPlugin.color("&8Value: &e" + COMPRESS_RATIO + " &fKill Tokens")));
+            // Hidden enchantment for the enchanted glint, without showing
+            // an enchantment line on the tooltip.
+            meta.addEnchant(Registry.ENCHANTMENT.get(NamespacedKey.minecraft("unbreaking")), 1, true);
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS);
             stack.setItemMeta(meta);
         }

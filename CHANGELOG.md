@@ -5,6 +5,19 @@ All notable changes to KillToken are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-08-04
+
+### Changed
+
+- The Compressed Kill Token Block now has an **enchanted glint** (a hidden
+  enchantment, so the tooltip stays plain).
+- `/killtoken give` and `/killtoken giveblock` now place the items **directly
+  into the target's inventory**, merging with existing stacks; overflow that
+  does not fit is dropped at the player's feet instead of being lost.
+- The Compressed Kill Token Block can **no longer be placed in the world**;
+  placement is cancelled with a message. The block is for trading, not
+  building. Kill drops still spawn on the floor as before.
+
 ## [1.2.0] - 2026-08-04
 
 ### Added

@@ -2,6 +2,7 @@ package dev.ro161012.killtoken;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -143,14 +144,19 @@ public final class KillTokenCommand implements TabExecutor {
     }
 
     /**
-     * Spawns the tokens on the floor at the target's feet. Tokens are never
-     * placed directly into an inventory - they are always physical drops.
+     * Places the tokens into the target's inventory, merging with existing
+     * stacks. Any overflow that does not fit is dropped at the target's
+     * feet, so no tokens are ever lost.
      *
      * @param target receiving player
      * @param amount number of tokens to hand out
      */
     private void deliver(final Player target, final int amount) {
-        target.getWorld().dropItemNaturally(target.getLocation(), plugin.createToken(amount));
+        final ItemStack stack = plugin.createToken(amount);
+        final Map<Integer, ItemStack> leftover = target.getInventory().addItem(stack);
+        for (final ItemStack drop : leftover.values()) {
+            target.getWorld().dropItemNaturally(target.getLocation(), drop);
+        }
     }
 
     private void handleGiveBlock(final CommandSender sender, final String[] args) {
@@ -192,7 +198,10 @@ public final class KillTokenCommand implements TabExecutor {
 
         final ItemStack stack = plugin.getCompressedBlockManager().createCompressedBlock();
         stack.setAmount(amount);
-        target.getWorld().dropItemNaturally(target.getLocation(), stack);
+        final Map<Integer, ItemStack> leftover = target.getInventory().addItem(stack);
+        for (final ItemStack drop : leftover.values()) {
+            target.getWorld().dropItemNaturally(target.getLocation(), drop);
+        }
         sender.sendMessage(KillTokenPlugin.color("&aGave &f" + amount + " Compressed Kill Token Block"
                 + (amount == 1 ? "" : "s") + "&a to &f" + target.getName() + "&a."));
     }

@@ -44,9 +44,9 @@ trades, crates, or any other economy you build on top of it.
   action bar (the text above the hotbar, between health and hunger) with a
   sound whose pitch rises the higher the streak goes. Streaks reset on death
   or disconnect.
-- **Always physical drops** — tokens always spawn on the floor, whether from
-  a kill or from `/killtoken give`; they are never placed directly into an
-  inventory.
+- **Give-to-inventory** — `/killtoken give` and `/killtoken giveblock` place
+  items directly into the target's inventory, merging with existing stacks;
+  overflow drops at their feet. Kill drops still spawn on the floor.
 - **Runtime currency customization** — change the token to *any* item in the
   game with a single command. No config editing, no restart.
 - **Compressed Kill Token Block** — 64 tokens pack into a single
@@ -101,16 +101,19 @@ This shuts down mutual kill-farming without penalizing legitimate PvP.
 ### Compressed Kill Token Block
 
 64 Kill Tokens pack into a single **Compressed Kill Token Block** — a
-quartz-textured block so it reads as "token-like" at a glance. There are no
-crafting recipes; the block is meant to be wired into your own trading
-(e.g. custom villager trades on an FFA server). Its lore states the token
-value:
+quartz-textured block with an **enchanted glint** so it reads as
+"token-like" at a glance. There are no crafting recipes; the block is meant
+to be wired into your own trading (e.g. custom villager trades on an FFA
+server). Its lore states the token value:
 
 > **Compressed Kill Token Block**
 > A compact block of Kill Tokens.
 > **Value: 64 Kill Tokens**
 
-The block material is configurable (`compressed-blocks.compressed-block-material`).
+The block stacks like any other item (up to 64) and **cannot be placed in
+the world** — placement is cancelled, so the block is used for trading only.
+The block material is configurable
+(`compressed-blocks.compressed-block-material`).
 
 ## Installation
 
@@ -129,8 +132,8 @@ The block material is configurable (`compressed-blocks.compressed-block-material
 | Command | Description | Permission | Default |
 |---------|-------------|-----------|---------|
 | `/killtoken set` | Sets the item in your **main hand** as the new Kill Token currency. All future drops use it. | `killtoken.set` | `op` |
-| `/killtoken give [player] [amount]` | Spawns tokens on the floor at a player's feet (defaults to yourself, 1 token). | `killtoken.give` | `op` |
-| `/killtoken giveblock [player] [amount]` | Spawns compressed Kill Token blocks (each worth 64 tokens; defaults to yourself, 1 block). | `killtoken.give` | `op` |
+| `/killtoken give [player] [amount]` | Places tokens into a player's inventory (defaults to yourself, 1 token); overflow drops at their feet. | `killtoken.give` | `op` |
+| `/killtoken giveblock [player] [amount]` | Places compressed Kill Token blocks (each worth 64 tokens; defaults to yourself, 1 block) into the inventory; overflow drops at their feet. | `killtoken.give` | `op` |
 | `/killtoken reload` | Reloads `config.yml`. | `killtoken.reload` | `op` |
 
 All subcommands are tab-completed (including online player names and amounts
