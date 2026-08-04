@@ -7,12 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `/killtoken give [player] [amount]` for handing out tokens directly, e.g.
+  for rewards or manual payouts (`killtoken.give` permission). Items that do
+  not fit in the target's inventory are dropped at their feet instead of
+  being deleted. Amounts are validated against 1&ndash;2304.
+- Fine-grained permissions: `killtoken.set`, `killtoken.give` and
+  `killtoken.reload`, all children of `killtoken.admin`.
+- MockBukkit-based integration test suite (26 tests) covering the plugin
+  lifecycle, configuration seeding, every command path, permissions, the kill
+  flow and the pair-based anti-farming cooldown.
+- Checkstyle enforcement in the Maven build (`config/checkstyle.xml`).
+- Maven wrapper (`./mvnw`) for reproducible builds.
+
 ### Changed
 
 - Extracted the PvP-only kill check into an explicit, documented
   `isPlayerKill` guard and documented exactly which death causes drop a token
   (melee and projectile kills by players qualify; mobs, environment, and
   suicide never do). Behaviour is unchanged.
+- Split `reload()` into `reloadConfig()` + `applyConfig()` so runtime state
+  synchronisation is independently testable.
 
 ## [1.0.0] - 2026-08-03
 

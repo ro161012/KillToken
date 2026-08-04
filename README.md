@@ -101,16 +101,20 @@ This shuts down mutual kill-farming without penalizing legitimate PvP.
 
 | Command | Description | Permission | Default |
 |---------|-------------|-----------|---------|
-| `/killtoken set` | Sets the item in your **main hand** as the new Kill Token currency. All future drops use it. | `killtoken.admin` | `op` |
-| `/killtoken reload` | Reloads `config.yml`. | `killtoken.admin` | `op` |
+| `/killtoken set` | Sets the item in your **main hand** as the new Kill Token currency. All future drops use it. | `killtoken.set` | `op` |
+| `/killtoken give [player] [amount]` | Hands out tokens directly (defaults to yourself, 1 token). Overflow that doesn't fit in the inventory is dropped at the player's feet. | `killtoken.give` | `op` |
+| `/killtoken reload` | Reloads `config.yml`. | `killtoken.reload` | `op` |
 
-Both subcommands are tab-completed.
+All subcommands are tab-completed (including online player names and amounts for `give`).
 
 ## Permissions
 
 | Permission | Description | Default |
 |-----------|-------------|---------|
-| `killtoken.admin` | Manage the currency item and reload configuration. | `op` |
+| `killtoken.admin` | Umbrella permission granting every KillToken permission below. | `op` |
+| `killtoken.set` | Change the Kill Token currency item. | `op` |
+| `killtoken.give` | Hand out Kill Tokens directly. | `op` |
+| `killtoken.reload` | Reload the configuration. | `op` |
 
 ## Configuration
 
@@ -139,35 +143,43 @@ Color codes use the `&` prefix (e.g. `&6`, `&c`, `&l`).
 
 ## Building from source
 
-Requires **Java 21+** and **Maven 3.9+**.
+Requires **Java 21+**. Maven is provided by the wrapper, so nothing else needs
+to be installed.
 
 ```bash
 git clone https://github.com/ro161012/KillToken.git
 cd KillToken
-mvn clean package
+./mvnw clean package        # mvnw.cmd on Windows
 ```
 
-The runnable jar is produced at `target/KillToken-<version>.jar`. Unit tests
-run automatically during the build.
+The build compiles the plugin, runs the full test suite (unit tests plus
+MockBukkit integration tests for the plugin lifecycle, commands and kill
+flow), and enforces the project's Checkstyle rules. The runnable jar is
+produced at `target/KillToken-<version>.jar`.
 
 ## Project layout
 
 ```
 .
 ├── pom.xml                                  Maven build configuration
+├── mvnw / .mvn/                             Maven wrapper (reproducible builds)
+├── config/checkstyle.xml                    Code style rules enforced in CI
 ├── src/
 │   ├── main/
 │   │   ├── java/dev/ro161012/killtoken/
 │   │   │   ├── KillTokenPlugin.java         Main class, config + currency item
 │   │   │   ├── KillListener.java            Death event -> token drop logic
 │   │   │   ├── PairCooldown.java            Symmetric pair-cooldown tracker
-│   │   │   └── KillTokenCommand.java        /killtoken set|reload
+│   │   │   └── KillTokenCommand.java        /killtoken set|give|reload
 │   │   └── resources/
 │   │       ├── plugin.yml                   Plugin metadata
 │   │       └── config.yml                   Default configuration
 │   └── test/
 │       └── java/dev/ro161012/killtoken/
-│           └── PairCooldownTest.java        Anti-farming cooldown tests
+│           ├── PairCooldownTest.java        Cooldown unit tests
+│           ├── KillTokenPluginTest.java     Lifecycle & config integration tests
+│           ├── KillTokenCommandTest.java    Command integration tests
+│           └── KillListenerTest.java        Kill-flow integration tests
 └── .github/workflows/build.yml              CI build & test
 ```
 
