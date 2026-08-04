@@ -1,0 +1,24 @@
+# ============================================================
+#  KillToken configuration
+# ============================================================
+
+# Seconds a killer<->victim pair must wait before another token
+# can drop between the same two players (in either direction).
+cooldown-seconds: 60
+
+# Number of token items dropped per qualifying kill.
+tokens-per-kill: 1
+
+# Message the killer when a drop is suppressed by the pair cooldown.
+notify-on-cooldown: true
+cooldown-message: "&cNo Kill Token dropped - you and this player are on cooldown."
+
+# Message sent to the killer when a token drops. Leave empty to disable.
+kill-message: "&6+1 Kill Token"
+
+# ------------------------------------------------------------
+#  Currency item
+# ------------------------------------------------------------
+# The item below is dropped as the Kill Token. It is seeded with a
+# named Nether Star on first launch; use /killtoken set in game to
+# replace it with whatever you are holding (persisted automatically).

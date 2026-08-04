@@ -1,0 +1,19 @@
+name: KillToken
+version: '${project.version}'
+main: dev.ro161012.killtoken.KillTokenPlugin
+api-version: '1.21'
+prefix: KillToken
+description: Drops a customizable Kill Token whenever a player kills another player, with pair-based anti-farming cooldowns.
+authors: [ro161012]
+website: https://github.com/ro161012/KillToken
+
+commands:
+  killtoken:
+    description: Manage the Kill Token currency.
+    usage: /killtoken <set|reload>
+    permission: killtoken.admin
+
+permissions:
+  killtoken.admin:
+    description: Allows managing the Kill Token currency and configuration.
+    default: op
