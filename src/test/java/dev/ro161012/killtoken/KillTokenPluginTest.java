@@ -4,8 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
+
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,10 +45,28 @@ final class KillTokenPluginTest {
         assertEquals(Material.NETHER_STAR, currency.getType());
         assertTrue(currency.getItemMeta().getDisplayName().contains("Kill Token"));
         assertEquals(1, currency.getItemMeta().getLore().size());
-        assertTrue(currency.getItemMeta().getLore().get(0).contains("Awarded for slaying"));
+        assertTrue(currency.getItemMeta().getLore().get(0).contains("Awarded for killing"));
 
         assertNotNull(plugin.getConfig().get(KillTokenPlugin.CURRENCY_PATH),
                 "default currency should be persisted to config.yml");
+    }
+
+    @Test
+    @DisplayName("old default currency lore is migrated without replacing custom currencies")
+    void legacyDefaultCurrencyLoreIsMigrated() {
+        final ItemStack legacy = new ItemStack(Material.NETHER_STAR);
+        final ItemMeta meta = legacy.getItemMeta();
+        meta.setDisplayName(ChatColor.GOLD + "Kill Token");
+        meta.setLore(List.of(ChatColor.GRAY + "Awarded for slaying another player."));
+        legacy.setItemMeta(meta);
+        plugin.getConfig().set(KillTokenPlugin.CURRENCY_PATH, legacy);
+
+        plugin.applyConfig();
+
+        assertTrue(plugin.getCurrencyItem().getItemMeta().getLore().get(0)
+                .contains("Awarded for killing another player."));
+        assertTrue(plugin.getConfig().getItemStack(KillTokenPlugin.CURRENCY_PATH).getItemMeta().getLore()
+                .get(0).contains("Awarded for killing another player."));
     }
 
     @Test

@@ -29,6 +29,10 @@ public class KillTokenPlugin extends JavaPlugin {
     /** Configuration path of the serialized currency item. */
     public static final String CURRENCY_PATH = "currency-item";
 
+    private static final String DEFAULT_TOKEN_NAME = "Kill Token";
+    private static final String DEFAULT_TOKEN_LORE = "Awarded for killing another player.";
+    private static final String LEGACY_DEFAULT_TOKEN_LORE = "Awarded for slaying another player.";
+
     private PairCooldown pairCooldown;
     private KillstreakTracker killstreakTracker;
     private CompressedBlockManager compressedBlocks;
@@ -107,7 +111,14 @@ public class KillTokenPlugin extends JavaPlugin {
         final FileConfiguration config = getConfig();
         final ItemStack stored = config.getItemStack(CURRENCY_PATH);
         if (stored != null) {
-            this.currencyItem = stored.clone();
+            if (isLegacyDefaultToken(stored)) {
+                this.currencyItem = createDefaultToken();
+                config.set(CURRENCY_PATH, currencyItem);
+                saveConfig();
+                getLogger().info("Updated the default Kill Token lore.");
+            } else {
+                this.currencyItem = stored.clone();
+            }
             return;
         }
         this.currencyItem = createDefaultToken();
@@ -154,12 +165,36 @@ public class KillTokenPlugin extends JavaPlugin {
         final ItemStack stack = new ItemStack(Material.NETHER_STAR);
         final ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(color("&6Kill Token"));
-            meta.setLore(List.of(color("&7Awarded for slaying another player.")));
+            meta.setDisplayName(color("&6" + DEFAULT_TOKEN_NAME));
+            meta.setLore(List.of(color("&7" + DEFAULT_TOKEN_LORE)));
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS);
             stack.setItemMeta(meta);
         }
         return stack;
+    }
+
+    /**
+     * Returns whether an item is the v1.2.2-or-earlier default token.
+     *
+     * <p>Only this exact stock item is migrated. Administrator-created
+     * currency items, including custom Nether Stars, remain untouched.
+     *
+     * @param stack item read from configuration
+     * @return {@code true} when the item has the old default lore
+     */
+    private boolean isLegacyDefaultToken(ItemStack stack) {
+        if (stack.getType() != Material.NETHER_STAR || !stack.hasItemMeta()) {
+            return false;
+        }
+
+        final ItemMeta meta = stack.getItemMeta();
+        if (meta == null || !meta.hasDisplayName() || !meta.hasLore() || meta.getLore() == null
+                || meta.getLore().size() != 1) {
+            return false;
+        }
+
+        return DEFAULT_TOKEN_NAME.equals(ChatColor.stripColor(meta.getDisplayName()))
+                && LEGACY_DEFAULT_TOKEN_LORE.equals(ChatColor.stripColor(meta.getLore().get(0)));
     }
 
     /**
