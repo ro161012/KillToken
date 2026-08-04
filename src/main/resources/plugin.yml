@@ -10,7 +10,7 @@ website: https://github.com/ro161012/KillToken
 commands:
   killtoken:
     description: Manage the Kill Token currency.
-    usage: /killtoken <set|give|reload>
+    usage: /killtoken <set|give|giveblock|reload>
     permission: killtoken.admin
 
 permissions:

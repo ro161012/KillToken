@@ -29,6 +29,7 @@ public class KillTokenPlugin extends JavaPlugin {
     private PairCooldown pairCooldown;
     private KillstreakTracker killstreakTracker;
     private ItemStack currencyItem;
+    private CompressedBlockManager compressedBlocks;
 
     @Override
     public void onEnable() {
@@ -36,7 +37,9 @@ public class KillTokenPlugin extends JavaPlugin {
 
         this.pairCooldown = new PairCooldown(getCooldownSeconds());
         this.killstreakTracker = new KillstreakTracker(this);
+        this.compressedBlocks = new CompressedBlockManager(this);
         loadCurrencyItem();
+        compressedBlocks.registerRecipes();
 
         getServer().getPluginManager().registerEvents(new KillListener(this), this);
 
@@ -48,11 +51,13 @@ public class KillTokenPlugin extends JavaPlugin {
         }
 
         getLogger().info("KillToken enabled (currency: " + currencyItem.getType()
-                + ", pair cooldown: " + getCooldownSeconds() + "s).");
+                + ", pair cooldown: " + getCooldownSeconds()
+                + "s, compressed blocks: " + compressedBlocksEnabled() + ").");
     }
 
     @Override
     public void onDisable() {
+        compressedBlocks.unregisterRecipes();
         getLogger().info("KillToken disabled.");
     }
 
@@ -73,6 +78,7 @@ public class KillTokenPlugin extends JavaPlugin {
     public void applyConfig() {
         loadCurrencyItem();
         pairCooldown.setCooldownSeconds(getCooldownSeconds());
+        compressedBlocks.registerRecipes();
     }
 
     /**
@@ -144,6 +150,7 @@ public class KillTokenPlugin extends JavaPlugin {
         this.currencyItem = copy;
         getConfig().set(CURRENCY_PATH, copy);
         saveConfig();
+        compressedBlocks.registerRecipes();
     }
 
     /**
@@ -171,6 +178,24 @@ public class KillTokenPlugin extends JavaPlugin {
      */
     public KillstreakTracker getKillstreakTracker() {
         return killstreakTracker;
+    }
+
+    /**
+     * Returns the compressed block manager.
+     *
+     * @return the compressed block manager
+     */
+    public CompressedBlockManager getCompressedBlockManager() {
+        return compressedBlocks;
+    }
+
+    /**
+     * Whether compressed block crafting is enabled.
+     *
+     * @return true if enabled
+     */
+    public boolean compressedBlocksEnabled() {
+        return getConfig().getBoolean(CompressedBlockManager.CONFIG_SECTION + ".enabled", true);
     }
 
     /**

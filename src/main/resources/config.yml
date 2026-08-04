@@ -39,3 +39,18 @@ killstreak:
 # The item below is dropped as the Kill Token. It is seeded with a
 # named Nether Star on first launch; use /killtoken set in game to
 # replace it with whatever you are holding (persisted automatically).
+
+# ------------------------------------------------------------
+#  Compressed Kill Token Blocks
+# ------------------------------------------------------------
+# Nine Kill Tokens craft into one Compressed Kill Token Block, and nine
+# of those into a Compressed Compressed Kill Token Block (81 tokens).
+# Both craft back into their components, so no tokens are ever lost.
+# The blocks use quartz-style materials so they read as "token-like" at
+# a glance.
+compressed-blocks:
+  enabled: true
+  # Material of the Compressed Kill Token Block (9 tokens).
+  compressed-block-material: QUARTZ_BLOCK
+  # Material of the Compressed Compressed Kill Token Block (81 tokens).
+  compressed-compressed-block-material: SMOOTH_QUARTZ

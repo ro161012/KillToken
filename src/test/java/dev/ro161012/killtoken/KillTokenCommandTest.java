@@ -156,6 +156,69 @@ final class KillTokenCommandTest {
         assertTrue(giveTargets.contains(player.getName()));
     }
 
+    private List<ItemStack> itemsOnFloor() {
+        return server.getWorlds().get(0).getEntities().stream()
+                .filter(entity -> entity.getType() == EntityType.ITEM)
+                .map(Item.class::cast)
+                .map(Item::getItemStack)
+                .toList();
+    }
+
+    @Test
+    @DisplayName("/killtoken giveblock drops a compressed block to the executor by default")
+    void giveBlockDefaultsToSelf() {
+        final PlayerMock player = server.addPlayer();
+        player.setOp(true);
+
+        player.performCommand("killtoken giveblock");
+
+        final List<ItemStack> items = itemsOnFloor();
+        assertEquals(1, items.size());
+        assertEquals(Material.QUARTZ_BLOCK, items.get(0).getType());
+        assertEquals(1, items.get(0).getAmount());
+    }
+
+    @Test
+    @DisplayName("/killtoken giveblock supports a target, tier and amount")
+    void giveBlockSupportsTargetTierAndAmount() {
+        final PlayerMock sender = server.addPlayer();
+        sender.setOp(true);
+        final PlayerMock target = server.addPlayer();
+
+        sender.performCommand("killtoken giveblock " + target.getName() + " 2 3");
+
+        final List<ItemStack> items = itemsOnFloor();
+        assertEquals(1, items.size());
+        assertEquals(Material.SMOOTH_QUARTZ, items.get(0).getType());
+        assertEquals(3, items.get(0).getAmount());
+    }
+
+    @Test
+    @DisplayName("/killtoken giveblock rejects invalid tiers and amounts")
+    void giveBlockRejectsInvalidArguments() {
+        final PlayerMock player = server.addPlayer();
+        player.setOp(true);
+
+        player.performCommand("killtoken giveblock " + player.getName() + " 3");
+        player.performCommand("killtoken giveblock " + player.getName() + " 1 0");
+        player.performCommand("killtoken giveblock " + player.getName()
+                + " 1 " + (KillTokenCommand.MAX_BLOCK_GIVE_AMOUNT + 1));
+        player.performCommand("killtoken giveblock " + player.getName() + " 1 bananas");
+
+        assertEquals(0, itemsOnFloor().size());
+    }
+
+    @Test
+    @DisplayName("players without permission cannot use giveblock")
+    void giveBlockRequiresPermission() {
+        final PlayerMock player = server.addPlayer();
+        player.setOp(false);
+
+        player.performCommand("killtoken giveblock");
+
+        assertEquals(0, itemsOnFloor().size());
+    }
+
     @Test
     @DisplayName("unknown subcommands fall back to usage without side effects")
     void unknownSubcommandShowsUsage() {

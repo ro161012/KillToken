@@ -19,6 +19,8 @@ import org.bukkit.inventory.ItemStack;
  *       becomes the new Kill Token currency item.</li>
  *   <li>{@code /killtoken give [player] [amount]} &mdash; grants tokens
  *       directly, e.g. for rewards or manual payouts.</li>
+ *   <li>{@code /killtoken giveblock [player] [tier] [amount]} &mdash; grants
+ *       compressed Kill Token blocks (tier 1 = 9 tokens, tier 2 = 81).</li>
  *   <li>{@code /killtoken reload} &mdash; reloads {@code config.yml}.</li>
  * </ul>
  *
@@ -28,11 +30,15 @@ import org.bukkit.inventory.ItemStack;
  */
 public final class KillTokenCommand implements TabExecutor {
 
-    private static final List<String> SUBCOMMANDS = List.of("set", "give", "reload");
+    private static final List<String> SUBCOMMANDS = List.of("set", "give", "giveblock", "reload");
     private static final List<String> AMOUNT_SUGGESTIONS = List.of("1", "16", "64");
+    private static final List<String> TIER_SUGGESTIONS = List.of("1", "2");
 
     /** Hard cap for a single {@code /killtoken give} payout (36 stacks). */
     static final int MAX_GIVE_AMOUNT = 2304;
+
+    /** Hard cap for a single {@code /killtoken giveblock} payout (9 stacks). */
+    static final int MAX_BLOCK_GIVE_AMOUNT = 576;
 
     private final KillTokenPlugin plugin;
 
@@ -56,6 +62,7 @@ public final class KillTokenCommand implements TabExecutor {
         switch (args[0].toLowerCase(Locale.ROOT)) {
             case "set" -> handleSet(sender);
             case "give" -> handleGive(sender, args);
+            case "giveblock" -> handleGiveBlock(sender, args);
             case "reload" -> handleReload(sender);
             default -> sendUsage(sender, label);
         }
@@ -67,6 +74,8 @@ public final class KillTokenCommand implements TabExecutor {
         sender.sendMessage(KillTokenPlugin.color("&f/" + label + " set &8- &7use your main-hand item as the token"));
         sender.sendMessage(KillTokenPlugin.color(
                 "&f/" + label + " give [player] [amount] &8- &7hand out tokens"));
+        sender.sendMessage(KillTokenPlugin.color(
+                "&f/" + label + " giveblock [player] [tier] [amount] &8- &7hand out compressed blocks"));
         sender.sendMessage(KillTokenPlugin.color("&f/" + label + " reload &8- &7reload the configuration"));
     }
 
@@ -145,6 +154,70 @@ public final class KillTokenCommand implements TabExecutor {
         target.getWorld().dropItemNaturally(target.getLocation(), plugin.createToken(amount));
     }
 
+    private void handleGiveBlock(final CommandSender sender, final String[] args) {
+        if (!sender.hasPermission("killtoken.give")) {
+            sender.sendMessage(KillTokenPlugin.color("&cYou do not have permission to do that."));
+            return;
+        }
+
+        final Player target;
+        int tier = 1;
+        int amount = 1;
+
+        if (args.length >= 2) {
+            target = Bukkit.getPlayerExact(args[1]);
+            if (target == null) {
+                sender.sendMessage(KillTokenPlugin.color("&cPlayer &f" + args[1] + "&c is not online."));
+                return;
+            }
+            if (args.length >= 3) {
+                try {
+                    tier = Integer.parseInt(args[2]);
+                } catch (NumberFormatException e) {
+                    sender.sendMessage(KillTokenPlugin.color("&cTier must be &f1&c or &f2&c."));
+                    return;
+                }
+                if (tier != 1 && tier != 2) {
+                    sender.sendMessage(KillTokenPlugin.color("&cTier must be &f1&c or &f2&c."));
+                    return;
+                }
+            }
+            if (args.length >= 4) {
+                try {
+                    amount = Integer.parseInt(args[3]);
+                } catch (NumberFormatException e) {
+                    sender.sendMessage(KillTokenPlugin.color("&cAmount must be a whole number."));
+                    return;
+                }
+                if (amount < 1 || amount > MAX_BLOCK_GIVE_AMOUNT) {
+                    sender.sendMessage(KillTokenPlugin.color("&cAmount must be between &f1&c and &f"
+                            + MAX_BLOCK_GIVE_AMOUNT + "&c."));
+                    return;
+                }
+            }
+        } else {
+            if (!(sender instanceof Player player)) {
+                sender.sendMessage(KillTokenPlugin.color(
+                        "&cUsage: /killtoken giveblock <player> [tier] [amount]"));
+                return;
+            }
+            target = player;
+        }
+
+        final CompressedBlockManager blocks = plugin.getCompressedBlockManager();
+        final ItemStack stack = tier == 1
+                ? blocks.createCompressedBlock()
+                : blocks.createCompressedCompressedBlock();
+        stack.setAmount(amount);
+        target.getWorld().dropItemNaturally(target.getLocation(), stack);
+
+        final String name = tier == 1
+                ? "Compressed Kill Token Block"
+                : "Compressed Compressed Kill Token Block";
+        sender.sendMessage(KillTokenPlugin.color("&aGave &f" + amount + " " + name
+                + (amount == 1 ? "" : "s") + "&a to &f" + target.getName() + "&a."));
+    }
+
     private void handleReload(final CommandSender sender) {
         if (!sender.hasPermission("killtoken.reload")) {
             sender.sendMessage(KillTokenPlugin.color("&cYou do not have permission to do that."));
@@ -165,7 +238,8 @@ public final class KillTokenCommand implements TabExecutor {
             final String prefix = args[0].toLowerCase(Locale.ROOT);
             return SUBCOMMANDS.stream().filter(name -> name.startsWith(prefix)).toList();
         }
-        if (args.length == 2 && args[0].equalsIgnoreCase("give")) {
+        if (args.length == 2 && (args[0].equalsIgnoreCase("give")
+                || args[0].equalsIgnoreCase("giveblock"))) {
             final String prefix = args[1].toLowerCase(Locale.ROOT);
             return Bukkit.getOnlinePlayers().stream()
                     .map(Player::getName)
@@ -173,6 +247,12 @@ public final class KillTokenCommand implements TabExecutor {
                     .toList();
         }
         if (args.length == 3 && args[0].equalsIgnoreCase("give")) {
+            return AMOUNT_SUGGESTIONS;
+        }
+        if (args.length == 3 && args[0].equalsIgnoreCase("giveblock")) {
+            return TIER_SUGGESTIONS;
+        }
+        if (args.length == 4 && args[0].equalsIgnoreCase("giveblock")) {
             return AMOUNT_SUGGESTIONS;
         }
         return List.of();

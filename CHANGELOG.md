@@ -5,6 +5,21 @@ All notable changes to KillToken are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-08-04
+
+### Added
+
+- **Compressed Kill Token Blocks**: nine Kill Tokens craft (shapeless) into a
+  quartz-textured **Compressed Kill Token Block** worth **9 tokens**, and nine
+  of those into a **Compressed Compressed Kill Token Block** (smooth quartz)
+  worth **81 tokens**. Both blocks craft back into their components, so no
+  tokens are ever lost. Each item's lore states its token value. Recipes are
+  exact-item based - only genuine Kill Tokens compress. The feature can be
+  disabled and both block materials configured via `compressed-blocks.*`.
+- `/killtoken giveblock [player] [tier] [amount]` for handing out compressed
+  blocks (tier 1 = 9 tokens, tier 2 = 81 tokens), using the `killtoken.give`
+  permission. Blocks always spawn as physical drops, like tokens.
+
 ## [1.1.0] - 2026-08-03
 
 ### Added
