@@ -22,7 +22,7 @@ jobs:
           cache: maven
 
       - name: Build and test KillToken
-        run: mvn -B -ntp verify
+        run: ./mvnw -B -ntp verify
 
       - name: Save the plugin jar
         uses: actions/upload-artifact@v4
