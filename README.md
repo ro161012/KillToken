@@ -1,12 +1,10 @@
 <p align="center">
-  <img src="docs/banner.png" alt="KillToken" width="100%" />
+  <b>KillToken</b>
 </p>
 
-<h1 align="center">KillToken</h1>
-
 <p align="center">
-  A PvP kill currency for <a href="https://papermc.io">Paper</a> servers.<br/>
-  Every player kill drops a Kill Token — with built-in anti-farming protection.
+  A PvP kill currency for <a href="https://papermc.io">Paper</a> servers.<br />
+  Every player kill drops a Kill Token, with built-in anti-farming protection.
 </p>
 
 <p align="center">
@@ -38,21 +36,21 @@
 
 ---
 
-## ✨ Features
+## Features
 
-| ⚔️ **Player-kill drops** | 🛡️ **Anti-farming cooldown** | 📈 **Killstreaks** |
+| Player-kill drops | Anti-farming cooldown | Killstreaks |
 |---|---|---|
-| Tokens drop only when another player deals the killing damage — melee, arrows, tridents. Mobs, fall damage, lava, drowning, void and suicide never drop. | After A kills B, the A↔B pair goes on cooldown (default 60s). While active, neither direction drops a token; kills against anyone else are unaffected. | Consecutive kills build a streak shown on the action bar, with a sound that rises in pitch. Streaks reset on death or disconnect. |
+| Tokens drop only when another player deals the killing damage — melee, arrows, tridents. Mobs, fall damage, lava, drowning, void and suicide never drop. | After A kills B, the A-B pair goes on cooldown (default 60s). While active, neither direction drops a token; kills against anyone else are unaffected. | Consecutive kills build a streak shown on the action bar, with a sound that rises in pitch. Streaks reset on death or disconnect. |
 
-| 🪙 **Customizable currency** | 📦 **Compressed Kill Token Block** | 🎒 **Give-to-inventory** |
+| Customizable currency | Compressed Kill Token Block | Give-to-inventory |
 |---|---|---|
-| The token is any item you choose — run `/killtoken set` holding it and every future drop uses it. No config editing, no restart. | A quartz block worth **64 tokens**, with its value written in the lore. No crafting recipes included; wire it into villager trades or shops. Can't be placed in the world. | `/killtoken give` and `/killtoken giveblock` place items directly into a player's inventory, merging with existing stacks. Overflow drops at their feet. |
+| The token is any item you choose — run `/killtoken set` holding it and every future drop uses it. No config editing, no restart. | A quartz block worth **64 tokens**, with its value written in the lore. No crafting recipes included; wire it into villager trades or shops. Cannot be placed in the world. | `/killtoken give` and `/killtoken giveblock` place items directly into a player's inventory, merging with existing stacks. Overflow drops at their feet. |
 
-| ⚙️ **Configurable** | 🧹 **Zero dependencies** | 🚀 **Lightweight** |
+| Configurable | Zero dependencies | Lightweight |
 |---|---|---|
 | Drop amount, cooldown length, messages, sounds and the block material all live in `config.yml`. | No libraries to install — drop the jar in and go. | Config and item templates are cached; kill events never re-parse config, sound names or color codes. |
 
-## 📥 Installation
+## Installation
 
 1. Download the latest `KillToken-<version>.jar` from the [Releases](https://github.com/ro161012/KillToken/releases) page.
 2. Place it in your server's `plugins/` folder.
@@ -62,7 +60,7 @@ A default `plugins/KillToken/config.yml` is created on first run.
 
 **Requirements:** Paper (or a Paper fork) 1.21+ and Java 21+.
 
-## 🎮 Commands
+## Commands
 
 | Command | Description | Permission |
 |---|---|---|
@@ -73,7 +71,7 @@ A default `plugins/KillToken/config.yml` is created on first run.
 
 All commands are tab-completed, including player names and amounts.
 
-### 🔐 Permissions
+### Permissions
 
 | Permission | Description | Default |
 |---|---|---|
@@ -82,7 +80,7 @@ All commands are tab-completed, including player names and amounts.
 | `killtoken.give` | Hand out Kill Tokens and compressed blocks. | `op` |
 | `killtoken.reload` | Reload the configuration. | `op` |
 
-## ⚙️ Configuration
+## Configuration
 
 ```yaml
 # Seconds a killer<->victim pair must wait before another token drops.
@@ -115,7 +113,7 @@ with whatever you hold when running `/killtoken set`.
 
 Color codes use the `&` prefix (e.g. `&6`, `&c`, `&l`).
 
-## 🛠️ Building
+## Building
 
 Requires **Java 21+**. Maven is provided by the wrapper.
 
@@ -129,11 +127,11 @@ The build compiles the plugin, runs the test suite (45+ MockBukkit
 integration and unit tests) and enforces Checkstyle. The jar is written to
 `target/KillToken-<version>.jar`.
 
-## ❓ FAQ
+## FAQ
 
 **How do I prevent players from farming tokens?**
-The pair cooldown is on by default. Two players can't generate tokens from
-killing each other repeatedly, and a single player can't earn from their own
+The pair cooldown is on by default. Two players cannot generate tokens from
+killing each other repeatedly, and a single player cannot earn from their own
 death.
 
 **Can I change what the token looks like?**
@@ -147,12 +145,14 @@ enchantment is hidden, so the tooltip stays clean.
 **Can players place the compressed block?**
 No. Placement is cancelled — the block exists for trading, not building.
 
-## 📄 License
+## License
 
 This project is licensed under the [MIT License](LICENSE).
 
 ---
 
 <p align="center">
-  <sub>Built with ❤️ for the Minecraft community · [Report a bug](https://github.com/ro161012/KillToken/issues) · [Request a feature](https://github.com/ro161012/KillToken/issues)</sub>
+  <a href="https://github.com/ro161012/KillToken/issues">Report an issue</a> ·
+  <a href="https://github.com/ro161012/KillToken/releases">Releases</a> ·
+  <a href="https://github.com/ro161012/KillToken/blob/main/CHANGELOG.md">Changelog</a>
 </p>
