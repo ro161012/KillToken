@@ -19,7 +19,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  * another player, and applies a pair-based cooldown to prevent token farming
  * between the same two players.
  */
-public final class KillTokenPlugin extends JavaPlugin {
+public class KillTokenPlugin extends JavaPlugin {
 
     /** Configuration path of the serialized currency item. */
     public static final String CURRENCY_PATH = "currency-item";
@@ -58,9 +58,17 @@ public final class KillTokenPlugin extends JavaPlugin {
      */
     public void reload() {
         reloadConfig();
+        applyConfig();
+        getLogger().info("Configuration reloaded.");
+    }
+
+    /**
+     * Re-applies the current in-memory configuration to runtime state: the
+     * currency item is re-read and the pair cooldown duration is updated.
+     */
+    public void applyConfig() {
         loadCurrencyItem();
         pairCooldown.setCooldownSeconds(getCooldownSeconds());
-        getLogger().info("Configuration reloaded.");
     }
 
     /**
@@ -106,8 +114,18 @@ public final class KillTokenPlugin extends JavaPlugin {
      * @return the token item stack to drop
      */
     public ItemStack createToken() {
+        return createToken(getTokensPerKill());
+    }
+
+    /**
+     * Creates a fresh copy of the currency item with the given amount.
+     *
+     * @param amount stack size of the returned item (clamped to at least 1)
+     * @return the token item stack
+     */
+    public ItemStack createToken(final int amount) {
         final ItemStack stack = currencyItem.clone();
-        stack.setAmount(Math.max(1, getTokensPerKill()));
+        stack.setAmount(Math.max(1, amount));
         return stack;
     }
 

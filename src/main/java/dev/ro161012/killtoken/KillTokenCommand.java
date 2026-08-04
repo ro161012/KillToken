@@ -2,7 +2,9 @@ package dev.ro161012.killtoken;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -16,12 +18,22 @@ import org.bukkit.inventory.ItemStack;
  * <ul>
  *   <li>{@code /killtoken set} &mdash; the item in the sender's main hand
  *       becomes the new Kill Token currency item.</li>
+ *   <li>{@code /killtoken give [player] [amount]} &mdash; grants tokens
+ *       directly, e.g. for rewards or manual payouts.</li>
  *   <li>{@code /killtoken reload} &mdash; reloads {@code config.yml}.</li>
  * </ul>
+ *
+ * <p>Subcommands are guarded by the fine-grained permissions
+ * {@code killtoken.set}, {@code killtoken.give} and {@code killtoken.reload},
+ * all children of {@code killtoken.admin}.
  */
 public final class KillTokenCommand implements TabExecutor {
 
-    private static final List<String> SUBCOMMANDS = List.of("set", "reload");
+    private static final List<String> SUBCOMMANDS = List.of("set", "give", "reload");
+    private static final List<String> AMOUNT_SUGGESTIONS = List.of("1", "16", "64");
+
+    /** Hard cap for a single {@code /killtoken give} payout (36 stacks). */
+    static final int MAX_GIVE_AMOUNT = 2304;
 
     private final KillTokenPlugin plugin;
 
@@ -44,6 +56,7 @@ public final class KillTokenCommand implements TabExecutor {
 
         switch (args[0].toLowerCase(Locale.ROOT)) {
             case "set" -> handleSet(sender);
+            case "give" -> handleGive(sender, args);
             case "reload" -> handleReload(sender);
             default -> sendUsage(sender, label);
         }
@@ -53,10 +66,16 @@ public final class KillTokenCommand implements TabExecutor {
     private void sendUsage(final CommandSender sender, final String label) {
         sender.sendMessage(KillTokenPlugin.color("&6KillToken &8| &7Commands:"));
         sender.sendMessage(KillTokenPlugin.color("&f/" + label + " set &8- &7use your main-hand item as the token"));
+        sender.sendMessage(KillTokenPlugin.color(
+                "&f/" + label + " give [player] [amount] &8- &7hand out tokens"));
         sender.sendMessage(KillTokenPlugin.color("&f/" + label + " reload &8- &7reload the configuration"));
     }
 
     private void handleSet(final CommandSender sender) {
+        if (!sender.hasPermission("killtoken.set")) {
+            sender.sendMessage(KillTokenPlugin.color("&cYou do not have permission to do that."));
+            return;
+        }
         if (!(sender instanceof Player player)) {
             sender.sendMessage(KillTokenPlugin.color("&cOnly players can set the Kill Token item."));
             return;
@@ -74,7 +93,68 @@ public final class KillTokenCommand implements TabExecutor {
                 + prettyName(held.getType()) + "&a."));
     }
 
+    private void handleGive(final CommandSender sender, final String[] args) {
+        if (!sender.hasPermission("killtoken.give")) {
+            sender.sendMessage(KillTokenPlugin.color("&cYou do not have permission to do that."));
+            return;
+        }
+
+        final Player target;
+        int amount = 1;
+
+        if (args.length >= 2) {
+            target = Bukkit.getPlayerExact(args[1]);
+            if (target == null) {
+                sender.sendMessage(KillTokenPlugin.color("&cPlayer &f" + args[1] + "&c is not online."));
+                return;
+            }
+            if (args.length >= 3) {
+                try {
+                    amount = Integer.parseInt(args[2]);
+                } catch (NumberFormatException e) {
+                    sender.sendMessage(KillTokenPlugin.color("&cAmount must be a whole number."));
+                    return;
+                }
+                if (amount < 1 || amount > MAX_GIVE_AMOUNT) {
+                    sender.sendMessage(KillTokenPlugin.color(
+                            "&cAmount must be between &f1&c and &f" + MAX_GIVE_AMOUNT + "&c."));
+                    return;
+                }
+            }
+        } else {
+            if (!(sender instanceof Player player)) {
+                sender.sendMessage(KillTokenPlugin.color(
+                        "&cUsage: /killtoken give <player> [amount]"));
+                return;
+            }
+            target = player;
+        }
+
+        deliver(target, amount);
+        sender.sendMessage(KillTokenPlugin.color("&aGave &f" + amount
+                + " Kill Token" + (amount == 1 ? "" : "s") + "&a to &f" + target.getName() + "&a."));
+    }
+
+    /**
+     * Adds the tokens to the target's inventory and drops any overflow at
+     * their feet instead of silently deleting items.
+     *
+     * @param target receiving player
+     * @param amount number of tokens to hand out
+     */
+    private void deliver(final Player target, final int amount) {
+        final Map<Integer, ItemStack> overflow =
+                target.getInventory().addItem(plugin.createToken(amount));
+        for (final ItemStack remainder : overflow.values()) {
+            target.getWorld().dropItemNaturally(target.getLocation(), remainder);
+        }
+    }
+
     private void handleReload(final CommandSender sender) {
+        if (!sender.hasPermission("killtoken.reload")) {
+            sender.sendMessage(KillTokenPlugin.color("&cYou do not have permission to do that."));
+            return;
+        }
         plugin.reload();
         sender.sendMessage(KillTokenPlugin.color("&aKillToken configuration reloaded."));
     }
@@ -89,6 +169,16 @@ public final class KillTokenCommand implements TabExecutor {
         if (args.length == 1) {
             final String prefix = args[0].toLowerCase(Locale.ROOT);
             return SUBCOMMANDS.stream().filter(name -> name.startsWith(prefix)).toList();
+        }
+        if (args.length == 2 && args[0].equalsIgnoreCase("give")) {
+            final String prefix = args[1].toLowerCase(Locale.ROOT);
+            return Bukkit.getOnlinePlayers().stream()
+                    .map(Player::getName)
+                    .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(prefix))
+                    .toList();
+        }
+        if (args.length == 3 && args[0].equalsIgnoreCase("give")) {
+            return AMOUNT_SUGGESTIONS;
         }
         return List.of();
     }
