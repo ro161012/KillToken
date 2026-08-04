@@ -1,82 +1,158 @@
-# KillToken
+<p align="center">
+  <img src="docs/banner.png" alt="KillToken" width="100%" />
+</p>
 
-A Paper plugin that drops a **Kill Token** item whenever a player kills another
-player. The token is a configurable currency item, and a pair-based cooldown
-stops two players from farming tokens off each other.
+<h1 align="center">KillToken</h1>
 
-Requires Paper 1.21+ and Java 21+.
+<p align="center">
+  A PvP kill currency for <a href="https://papermc.io">Paper</a> servers.<br/>
+  Every player kill drops a Kill Token — with built-in anti-farming protection.
+</p>
 
-## Features
+<p align="center">
+  <a href="https://github.com/ro161012/KillToken/actions">
+    <img src="https://img.shields.io/github/actions/workflow/status/ro161012/KillToken/build.yml?branch=main&logo=github&label=build" alt="Build status" />
+  </a>
+  <a href="https://github.com/ro161012/KillToken/releases">
+    <img src="https://img.shields.io/github/v/release/ro161012/KillToken?logo=github&label=release" alt="Latest release" />
+  </a>
+  <a href="https://papermc.io">
+    <img src="https://img.shields.io/badge/Paper-1.21%2B-00A8A8?logo=markdown&logoColor=white" alt="Paper 1.21+" />
+  </a>
+  <a href="https://adoptium.net">
+    <img src="https://img.shields.io/badge/Java-21%2B-orange?logo=openjdk&logoColor=white" alt="Java 21+" />
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/github/license/ro161012/KillToken?label=license" alt="License" />
+  </a>
+</p>
 
-- Tokens drop only when a player deals the killing damage. Mobs, fall damage,
-  lava, drowning, void and suicide never drop tokens.
-- Pair cooldown: after A kills B, neither A→B nor B→A drops a token for the
-  configured duration. Kills against other players are unaffected.
-- Killstreaks: consecutive kills show a counter on the action bar and play a
-  sound that rises in pitch. Streaks reset on death or disconnect.
-- Compressed Kill Token Block: a quartz block worth 64 tokens, with the value
-  written in its lore. No crafting recipes are included; set up trades with
-  your own villagers or shops.
-- `/killtoken give` and `/killtoken giveblock` place items directly into a
-  player's inventory. Overflow drops at their feet.
-- The compressed block cannot be placed in the world.
-- Drop amount, cooldown length, messages and the block material are
-  configurable in `config.yml`.
+<p align="center">
+  <a href="#features">Features</a> ·
+  <a href="#installation">Installation</a> ·
+  <a href="#commands">Commands</a> ·
+  <a href="#configuration">Configuration</a> ·
+  <a href="#building">Building</a> ·
+  <a href="#faq">FAQ</a>
+</p>
 
-## Commands
+---
 
-| Command | Description |
-|---|---|
-| `/killtoken set` | Use the item in your main hand as the Kill Token currency. |
-| `/killtoken give [player] [amount]` | Give Kill Tokens (defaults to you, 1 token). |
-| `/killtoken giveblock [player] [amount]` | Give compressed blocks, each worth 64 tokens. |
-| `/killtoken reload` | Reload `config.yml`. |
+## ✨ Features
 
-All commands default to operators, with a separate permission per subcommand
-(`killtoken.set`, `killtoken.give`, `killtoken.reload`, all children of
-`killtoken.admin`).
+| ⚔️ **Player-kill drops** | 🛡️ **Anti-farming cooldown** | 📈 **Killstreaks** |
+|---|---|---|
+| Tokens drop only when another player deals the killing damage — melee, arrows, tridents. Mobs, fall damage, lava, drowning, void and suicide never drop. | After A kills B, the A↔B pair goes on cooldown (default 60s). While active, neither direction drops a token; kills against anyone else are unaffected. | Consecutive kills build a streak shown on the action bar, with a sound that rises in pitch. Streaks reset on death or disconnect. |
 
-## Configuration
+| 🪙 **Customizable currency** | 📦 **Compressed Kill Token Block** | 🎒 **Give-to-inventory** |
+|---|---|---|
+| The token is any item you choose — run `/killtoken set` holding it and every future drop uses it. No config editing, no restart. | A quartz block worth **64 tokens**, with its value written in the lore. No crafting recipes included; wire it into villager trades or shops. Can't be placed in the world. | `/killtoken give` and `/killtoken giveblock` place items directly into a player's inventory, merging with existing stacks. Overflow drops at their feet. |
 
-The plugin creates `plugins/KillToken/config.yml` on first run.
+| ⚙️ **Configurable** | 🧹 **Zero dependencies** | 🚀 **Lightweight** |
+|---|---|---|
+| Drop amount, cooldown length, messages, sounds and the block material all live in `config.yml`. | No libraries to install — drop the jar in and go. | Config and item templates are cached; kill events never re-parse config, sound names or color codes. |
+
+## 📥 Installation
+
+1. Download the latest `KillToken-<version>.jar` from the [Releases](https://github.com/ro161012/KillToken/releases) page.
+2. Place it in your server's `plugins/` folder.
+3. Restart the server.
+
+A default `plugins/KillToken/config.yml` is created on first run.
+
+**Requirements:** Paper (or a Paper fork) 1.21+ and Java 21+.
+
+## 🎮 Commands
+
+| Command | Description | Permission |
+|---|---|---|
+| `/killtoken set` | Use the item in your main hand as the Kill Token currency. | `killtoken.set` |
+| `/killtoken give [player] [amount]` | Give Kill Tokens (defaults to you, 1 token). | `killtoken.give` |
+| `/killtoken giveblock [player] [amount]` | Give compressed blocks, each worth 64 tokens. | `killtoken.give` |
+| `/killtoken reload` | Reload `config.yml`. | `killtoken.reload` |
+
+All commands are tab-completed, including player names and amounts.
+
+### 🔐 Permissions
+
+| Permission | Description | Default |
+|---|---|---|
+| `killtoken.admin` | Umbrella permission granting every permission below. | `op` |
+| `killtoken.set` | Change the Kill Token currency item. | `op` |
+| `killtoken.give` | Hand out Kill Tokens and compressed blocks. | `op` |
+| `killtoken.reload` | Reload the configuration. | `op` |
+
+## ⚙️ Configuration
 
 ```yaml
-# Seconds between drops for the same pair of players.
+# Seconds a killer<->victim pair must wait before another token drops.
 cooldown-seconds: 60
 
 # Tokens dropped per qualifying kill.
 tokens-per-kill: 1
 
-# Message sent to the killer when a token drops. Empty disables it.
+# Message sent to the killer when a token drops. Leave empty to disable.
 kill-message: "&6+1 Kill Token"
+
+# Message when a drop is suppressed by the pair cooldown.
+notify-on-cooldown: true
+cooldown-message: "&cNo Kill Token dropped - you and this player are on cooldown."
 
 killstreak:
   enabled: true
-  message: "&6Killstreak&8: &f%streak%"   # %streak% = current streak
-  sound: ENTITY_EXPERIENCE_ORB_PICKUP
-  base-pitch: 0.7
-  pitch-per-kill: 0.15
-  max-pitch: 2.0
+  message: "&6Killstreak&8: &f%streak%"   # %streak% = current streak length
+  sound: ENTITY_EXPERIENCE_ORB_PICKUP     # any org.bukkit.Sound name
+  base-pitch: 0.7                         # pitch at a streak of 1
+  pitch-per-kill: 0.15                    # rise per consecutive kill
+  max-pitch: 2.0                          # pitch cap
 
 compressed-blocks:
-  compressed-block-material: QUARTZ_BLOCK  # material of the 64-token block
+  compressed-block-material: QUARTZ_BLOCK # material of the 64-token block
 ```
 
-The currency item itself is stored under `currency-item` and is replaced with
-whatever you hold when running `/killtoken set`.
+The currency item itself is stored under `currency-item` and is replaced
+with whatever you hold when running `/killtoken set`.
 
-## Building
+Color codes use the `&` prefix (e.g. `&6`, `&c`, `&l`).
+
+## 🛠️ Building
+
+Requires **Java 21+**. Maven is provided by the wrapper.
 
 ```sh
-./mvnw clean package
+git clone https://github.com/ro161012/KillToken.git
+cd KillToken
+./mvnw clean package        # mvnw.cmd on Windows
 ```
 
-Requires Java 21. The jar is written to `target/KillToken-<version>.jar`.
+The build compiles the plugin, runs the test suite (45+ MockBukkit
+integration and unit tests) and enforces Checkstyle. The jar is written to
+`target/KillToken-<version>.jar`.
 
-## Contributing
+## ❓ FAQ
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
+**How do I prevent players from farming tokens?**
+The pair cooldown is on by default. Two players can't generate tokens from
+killing each other repeatedly, and a single player can't earn from their own
+death.
 
-## License
+**Can I change what the token looks like?**
+Yes — hold any item and run `/killtoken set`. The item (including its name
+and lore) is persisted as the new currency.
 
-[MIT](LICENSE)
+**Why does my compressed block have an enchanted glint?**
+It carries a hidden enchantment so it reads as a special currency item. The
+enchantment is hidden, so the tooltip stays clean.
+
+**Can players place the compressed block?**
+No. Placement is cancelled — the block exists for trading, not building.
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+<p align="center">
+  <sub>Built with ❤️ for the Minecraft community · [Report a bug](https://github.com/ro161012/KillToken/issues) · [Request a feature](https://github.com/ro161012/KillToken/issues)</sub>
+</p>
