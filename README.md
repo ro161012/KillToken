@@ -53,6 +53,23 @@ another player. If so, it spawns the configured currency item directly at the
 death location. The item includes fixed metadata (name and lore) so the token
 always looks the same.
 
+### What counts as a kill
+
+A token drops **only when another player is responsible for the killing
+damage**:
+
+| Death cause | Token drops? |
+|---|---|
+| Melee kill by a player | ✅ Yes |
+| Arrow / trident / projectile shot by a player | ✅ Yes (shooter is resolved as the killer) |
+| Killed by a mob (zombie, creeper, …) | ❌ No |
+| Fall damage, lava, drowning, void, fire, explosions | ❌ No |
+| Suicide (`/kill`) | ❌ No |
+
+The check is based on Paper's `Player#getKiller()`, which returns the player
+who dealt the killing damage — or `null` for every non-player cause — plus an
+explicit guard so players can never earn tokens from their own deaths.
+
 ### Anti-farming system
 
 To prevent abuse, KillToken uses a **pair-based cooldown**:

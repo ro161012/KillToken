@@ -35,8 +35,9 @@ public final class KillListener implements Listener {
         final Player victim = event.getEntity();
         final Player killer = victim.getKiller();
 
-        // Only player-versus-player kills award tokens.
-        if (killer == null || killer.getUniqueId().equals(victim.getUniqueId())) {
+        // Strict PvP requirement: a token only drops when another player
+        // is responsible for the killing damage.
+        if (!isPlayerKill(victim, killer)) {
             return;
         }
 
@@ -60,5 +61,31 @@ public final class KillListener implements Listener {
         if (!killMessage.isEmpty()) {
             killer.sendMessage(killMessage);
         }
+    }
+
+    /**
+     * Decides whether the death qualifies for a token drop.
+     *
+     * <p>Paper's {@link Player#getKiller()} returns the player responsible
+     * for the killing damage, or {@code null} otherwise:
+     *
+     * <ul>
+     *   <li>Melee or projectile kill by a player &rarr; that player (qualifies;
+     *       arrows/tridents count, the shooter is resolved as the killer).</li>
+     *   <li>Killed by a mob &rarr; {@code null} (no drop).</li>
+     *   <li>Fall damage, lava, drowning, void, explosions, poison, etc.
+     *       &rarr; {@code null} (no drop).</li>
+     *   <li>Suicide ({@code /kill}) &rarr; {@code null} (no drop).</li>
+     * </ul>
+     *
+     * <p>Self-kills are rejected explicitly as well, so a player can never
+     * receive a token from their own death.
+     *
+     * @param victim the player who died
+     * @param killer the killer reported by the server, may be null
+     * @return true only if another player killed the victim
+     */
+    private static boolean isPlayerKill(final Player victim, final Player killer) {
+        return killer != null && !killer.getUniqueId().equals(victim.getUniqueId());
     }
 }
