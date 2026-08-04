@@ -1,6 +1,6 @@
 package dev.ro161012.killtoken;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 
@@ -39,7 +39,6 @@ public class KillTokenPlugin extends JavaPlugin {
         this.killstreakTracker = new KillstreakTracker(this);
         this.compressedBlocks = new CompressedBlockManager(this);
         loadCurrencyItem();
-        compressedBlocks.registerRecipes();
 
         getServer().getPluginManager().registerEvents(new KillListener(this), this);
 
@@ -51,13 +50,11 @@ public class KillTokenPlugin extends JavaPlugin {
         }
 
         getLogger().info("KillToken enabled (currency: " + currencyItem.getType()
-                + ", pair cooldown: " + getCooldownSeconds()
-                + "s, compressed blocks: " + compressedBlocksEnabled() + ").");
+                + ", pair cooldown: " + getCooldownSeconds() + "s).");
     }
 
     @Override
     public void onDisable() {
-        compressedBlocks.unregisterRecipes();
         getLogger().info("KillToken disabled.");
     }
 
@@ -78,7 +75,6 @@ public class KillTokenPlugin extends JavaPlugin {
     public void applyConfig() {
         loadCurrencyItem();
         pairCooldown.setCooldownSeconds(getCooldownSeconds());
-        compressedBlocks.registerRecipes();
     }
 
     /**
@@ -108,9 +104,7 @@ public class KillTokenPlugin extends JavaPlugin {
         final ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(color("&6Kill Token"));
-            meta.setLore(Arrays.asList(
-                    color("&7Awarded for slaying another player."),
-                    color("&7A rare currency on this server.")));
+            meta.setLore(List.of(color("&7Awarded for slaying another player.")));
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS);
             stack.setItemMeta(meta);
         }
@@ -150,7 +144,6 @@ public class KillTokenPlugin extends JavaPlugin {
         this.currencyItem = copy;
         getConfig().set(CURRENCY_PATH, copy);
         saveConfig();
-        compressedBlocks.registerRecipes();
     }
 
     /**
@@ -187,15 +180,6 @@ public class KillTokenPlugin extends JavaPlugin {
      */
     public CompressedBlockManager getCompressedBlockManager() {
         return compressedBlocks;
-    }
-
-    /**
-     * Whether compressed block crafting is enabled.
-     *
-     * @return true if enabled
-     */
-    public boolean compressedBlocksEnabled() {
-        return getConfig().getBoolean(CompressedBlockManager.CONFIG_SECTION + ".enabled", true);
     }
 
     /**

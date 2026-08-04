@@ -49,10 +49,9 @@ trades, crates, or any other economy you build on top of it.
   inventory.
 - **Runtime currency customization** — change the token to *any* item in the
   game with a single command. No config editing, no restart.
-- **Compressed Kill Token Blocks** — nine tokens craft into a quartz-textured
-  **Compressed Kill Token Block**, and nine of those into a **Compressed
-  Compressed Kill Token Block** (81 tokens). Both uncraft back into their
-  components, so tokens are never lost.
+- **Compressed Kill Token Block** — 64 tokens pack into a single
+  quartz-textured storage block for trading (e.g. custom villager trades).
+  No crafting recipes; you wire it into your own economy.
 - **Configurable** — drop amount, cooldown length, and all messages live in
   `config.yml`.
 - **Zero dependencies** — no libraries to install, works out of the box.
@@ -99,31 +98,19 @@ To prevent abuse, KillToken uses a **pair-based cooldown**:
 
 This shuts down mutual kill-farming without penalizing legitimate PvP.
 
-### Compressed Kill Token Blocks
+### Compressed Kill Token Block
 
-Tokens can be packed into storage blocks in a crafting table (shapeless):
+64 Kill Tokens pack into a single **Compressed Kill Token Block** — a
+quartz-textured block so it reads as "token-like" at a glance. There are no
+crafting recipes; the block is meant to be wired into your own trading
+(e.g. custom villager trades on an FFA server). Its lore states the token
+value:
 
-| Crafting | Result |
-|---|---|
-| 9 Kill Tokens | 1 Compressed Kill Token Block (worth **9** tokens) |
-| 9 Compressed Kill Token Blocks | 1 Compressed Compressed Kill Token Block (worth **81** tokens) |
-| 1 Compressed Kill Token Block | 9 Kill Tokens |
-| 1 Compressed Compressed Kill Token Block | 9 Compressed Kill Token Blocks |
+> **Compressed Kill Token Block**
+> A compact block of Kill Tokens.
+> **Value: 64 Kill Tokens**
 
-The blocks use quartz-style materials (quartz block / smooth quartz) so they
-read as "token-like" at a glance, and their item lore always states the
-token value, e.g.:
-
-> **✦ Compressed Kill Token Block**
-> A dense slab of Kill Tokens, pressed
-> into a single portable block.
-> **Value: 9 Kill Tokens**
-> Uncrafts into 9 Kill Tokens
-
-The whole feature can be switched off (`compressed-blocks.enabled`), and both
-block materials are configurable. Recipes are exact-item based, so only real
-Kill Tokens compress - renamed or plain duplicates of the material do not
-work.
+The block material is configurable (`compressed-blocks.compressed-block-material`).
 
 ## Installation
 
@@ -143,11 +130,11 @@ work.
 |---------|-------------|-----------|---------|
 | `/killtoken set` | Sets the item in your **main hand** as the new Kill Token currency. All future drops use it. | `killtoken.set` | `op` |
 | `/killtoken give [player] [amount]` | Spawns tokens on the floor at a player's feet (defaults to yourself, 1 token). | `killtoken.give` | `op` |
-| `/killtoken giveblock [player] [tier] [amount]` | Spawns compressed Kill Token blocks (tier `1` = 9 tokens, tier `2` = 81 tokens; defaults to yourself, tier 1, 1 block). | `killtoken.give` | `op` |
+| `/killtoken giveblock [player] [amount]` | Spawns compressed Kill Token blocks (each worth 64 tokens; defaults to yourself, 1 block). | `killtoken.give` | `op` |
 | `/killtoken reload` | Reloads `config.yml`. | `killtoken.reload` | `op` |
 
-All subcommands are tab-completed (including online player names, tiers and
-amounts for `give`/`giveblock`).
+All subcommands are tab-completed (including online player names and amounts
+for `give`/`giveblock`).
 
 ## Permissions
 
@@ -177,13 +164,11 @@ cooldown-message: "&cNo Kill Token dropped - you and this player are on cooldown
 kill-message: "&6+1 Kill Token"
 ```
 
-### Compressed Kill Token Blocks
+### Compressed Kill Token Block
 
 ```yaml
 compressed-blocks:
-  enabled: true
-  compressed-block-material: QUARTZ_BLOCK        # 9 tokens
-  compressed-compressed-block-material: SMOOTH_QUARTZ  # 81 tokens
+  compressed-block-material: QUARTZ_BLOCK        # 64 tokens
 ```
 
 The currency item is stored under `currency-item` and is seeded automatically
@@ -256,7 +241,6 @@ produced at `target/KillToken-<version>.jar`.
 
 ## Roadmap / ideas
 
-- [x] Compressed Kill Token storage blocks (9:1 and 81:1)
 - [ ] Per-player killstreak bonuses
 - [ ] Optional drop-on-ground vs. direct-to-inventory mode
 - [ ] PlaceholderAPI / Vault hooks

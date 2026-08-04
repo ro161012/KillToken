@@ -19,8 +19,8 @@ import org.bukkit.inventory.ItemStack;
  *       becomes the new Kill Token currency item.</li>
  *   <li>{@code /killtoken give [player] [amount]} &mdash; grants tokens
  *       directly, e.g. for rewards or manual payouts.</li>
- *   <li>{@code /killtoken giveblock [player] [tier] [amount]} &mdash; grants
- *       compressed Kill Token blocks (tier 1 = 9 tokens, tier 2 = 81).</li>
+ *   <li>{@code /killtoken giveblock [player] [amount]} &mdash; grants
+ *       compressed Kill Token blocks (each worth 64 tokens).</li>
  *   <li>{@code /killtoken reload} &mdash; reloads {@code config.yml}.</li>
  * </ul>
  *
@@ -32,7 +32,6 @@ public final class KillTokenCommand implements TabExecutor {
 
     private static final List<String> SUBCOMMANDS = List.of("set", "give", "giveblock", "reload");
     private static final List<String> AMOUNT_SUGGESTIONS = List.of("1", "16", "64");
-    private static final List<String> TIER_SUGGESTIONS = List.of("1", "2");
 
     /** Hard cap for a single {@code /killtoken give} payout (36 stacks). */
     static final int MAX_GIVE_AMOUNT = 2304;
@@ -75,7 +74,7 @@ public final class KillTokenCommand implements TabExecutor {
         sender.sendMessage(KillTokenPlugin.color(
                 "&f/" + label + " give [player] [amount] &8- &7hand out tokens"));
         sender.sendMessage(KillTokenPlugin.color(
-                "&f/" + label + " giveblock [player] [tier] [amount] &8- &7hand out compressed blocks"));
+                "&f/" + label + " giveblock [player] [amount] &8- &7hand out compressed blocks"));
         sender.sendMessage(KillTokenPlugin.color("&f/" + label + " reload &8- &7reload the configuration"));
     }
 
@@ -161,7 +160,6 @@ public final class KillTokenCommand implements TabExecutor {
         }
 
         final Player target;
-        int tier = 1;
         int amount = 1;
 
         if (args.length >= 2) {
@@ -172,19 +170,7 @@ public final class KillTokenCommand implements TabExecutor {
             }
             if (args.length >= 3) {
                 try {
-                    tier = Integer.parseInt(args[2]);
-                } catch (NumberFormatException e) {
-                    sender.sendMessage(KillTokenPlugin.color("&cTier must be &f1&c or &f2&c."));
-                    return;
-                }
-                if (tier != 1 && tier != 2) {
-                    sender.sendMessage(KillTokenPlugin.color("&cTier must be &f1&c or &f2&c."));
-                    return;
-                }
-            }
-            if (args.length >= 4) {
-                try {
-                    amount = Integer.parseInt(args[3]);
+                    amount = Integer.parseInt(args[2]);
                 } catch (NumberFormatException e) {
                     sender.sendMessage(KillTokenPlugin.color("&cAmount must be a whole number."));
                     return;
@@ -198,23 +184,16 @@ public final class KillTokenCommand implements TabExecutor {
         } else {
             if (!(sender instanceof Player player)) {
                 sender.sendMessage(KillTokenPlugin.color(
-                        "&cUsage: /killtoken giveblock <player> [tier] [amount]"));
+                        "&cUsage: /killtoken giveblock <player> [amount]"));
                 return;
             }
             target = player;
         }
 
-        final CompressedBlockManager blocks = plugin.getCompressedBlockManager();
-        final ItemStack stack = tier == 1
-                ? blocks.createCompressedBlock()
-                : blocks.createCompressedCompressedBlock();
+        final ItemStack stack = plugin.getCompressedBlockManager().createCompressedBlock();
         stack.setAmount(amount);
         target.getWorld().dropItemNaturally(target.getLocation(), stack);
-
-        final String name = tier == 1
-                ? "Compressed Kill Token Block"
-                : "Compressed Compressed Kill Token Block";
-        sender.sendMessage(KillTokenPlugin.color("&aGave &f" + amount + " " + name
+        sender.sendMessage(KillTokenPlugin.color("&aGave &f" + amount + " Compressed Kill Token Block"
                 + (amount == 1 ? "" : "s") + "&a to &f" + target.getName() + "&a."));
     }
 
@@ -246,13 +225,8 @@ public final class KillTokenCommand implements TabExecutor {
                     .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(prefix))
                     .toList();
         }
-        if (args.length == 3 && args[0].equalsIgnoreCase("give")) {
-            return AMOUNT_SUGGESTIONS;
-        }
-        if (args.length == 3 && args[0].equalsIgnoreCase("giveblock")) {
-            return TIER_SUGGESTIONS;
-        }
-        if (args.length == 4 && args[0].equalsIgnoreCase("giveblock")) {
+        if (args.length == 3 && (args[0].equalsIgnoreCase("give")
+                || args[0].equalsIgnoreCase("giveblock"))) {
             return AMOUNT_SUGGESTIONS;
         }
         return List.of();

@@ -40,7 +40,8 @@ final class KillTokenPluginTest {
         final ItemStack currency = plugin.getCurrencyItem();
         assertEquals(Material.NETHER_STAR, currency.getType());
         assertTrue(currency.getItemMeta().getDisplayName().contains("Kill Token"));
-        assertEquals(2, currency.getItemMeta().getLore().size());
+        assertEquals(1, currency.getItemMeta().getLore().size());
+        assertTrue(currency.getItemMeta().getLore().get(0).contains("Awarded for slaying"));
 
         assertNotNull(plugin.getConfig().get(KillTokenPlugin.CURRENCY_PATH),
                 "default currency should be persisted to config.yml");

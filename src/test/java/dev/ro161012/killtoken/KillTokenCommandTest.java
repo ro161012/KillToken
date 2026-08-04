@@ -149,7 +149,7 @@ final class KillTokenCommandTest {
 
         final List<String> subs = plugin.getCommand("killtoken")
                 .tabComplete(player, "killtoken", new String[]{""});
-        assertTrue(subs.containsAll(List.of("set", "give", "reload")));
+        assertTrue(subs.containsAll(List.of("set", "give", "giveblock", "reload")));
 
         final List<String> giveTargets = plugin.getCommand("killtoken")
                 .tabComplete(player, "killtoken", new String[]{"give", ""});
@@ -179,31 +179,30 @@ final class KillTokenCommandTest {
     }
 
     @Test
-    @DisplayName("/killtoken giveblock supports a target, tier and amount")
-    void giveBlockSupportsTargetTierAndAmount() {
+    @DisplayName("/killtoken giveblock supports a target and amount")
+    void giveBlockSupportsTargetAndAmount() {
         final PlayerMock sender = server.addPlayer();
         sender.setOp(true);
         final PlayerMock target = server.addPlayer();
 
-        sender.performCommand("killtoken giveblock " + target.getName() + " 2 3");
+        sender.performCommand("killtoken giveblock " + target.getName() + " 3");
 
         final List<ItemStack> items = itemsOnFloor();
         assertEquals(1, items.size());
-        assertEquals(Material.SMOOTH_QUARTZ, items.get(0).getType());
+        assertEquals(Material.QUARTZ_BLOCK, items.get(0).getType());
         assertEquals(3, items.get(0).getAmount());
     }
 
     @Test
-    @DisplayName("/killtoken giveblock rejects invalid tiers and amounts")
+    @DisplayName("/killtoken giveblock rejects invalid amounts")
     void giveBlockRejectsInvalidArguments() {
         final PlayerMock player = server.addPlayer();
         player.setOp(true);
 
-        player.performCommand("killtoken giveblock " + player.getName() + " 3");
-        player.performCommand("killtoken giveblock " + player.getName() + " 1 0");
+        player.performCommand("killtoken giveblock " + player.getName() + " 0");
         player.performCommand("killtoken giveblock " + player.getName()
-                + " 1 " + (KillTokenCommand.MAX_BLOCK_GIVE_AMOUNT + 1));
-        player.performCommand("killtoken giveblock " + player.getName() + " 1 bananas");
+                + " " + (KillTokenCommand.MAX_BLOCK_GIVE_AMOUNT + 1));
+        player.performCommand("killtoken giveblock " + player.getName() + " bananas");
 
         assertEquals(0, itemsOnFloor().size());
     }

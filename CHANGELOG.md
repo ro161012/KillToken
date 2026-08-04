@@ -9,16 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Compressed Kill Token Blocks**: nine Kill Tokens craft (shapeless) into a
-  quartz-textured **Compressed Kill Token Block** worth **9 tokens**, and nine
-  of those into a **Compressed Compressed Kill Token Block** (smooth quartz)
-  worth **81 tokens**. Both blocks craft back into their components, so no
-  tokens are ever lost. Each item's lore states its token value. Recipes are
-  exact-item based - only genuine Kill Tokens compress. The feature can be
-  disabled and both block materials configured via `compressed-blocks.*`.
-- `/killtoken giveblock [player] [tier] [amount]` for handing out compressed
-  blocks (tier 1 = 9 tokens, tier 2 = 81 tokens), using the `killtoken.give`
-  permission. Blocks always spawn as physical drops, like tokens.
+- **Compressed Kill Token Block**: packs **64 Kill Tokens** into a single
+  quartz-textured storage block whose lore states its token value. No
+  crafting recipes are provided - servers wire the block into their own
+  trading (e.g. custom villager trades). The material is configurable via
+  `compressed-blocks.compressed-block-material`.
+- `/killtoken giveblock [player] [amount]` for handing out compressed
+  blocks, using the `killtoken.give` permission. Blocks always spawn as
+  physical drops, like tokens.
+
+### Changed
+
+- The default Kill Token lore is now a single plain line ("Awarded for
+  slaying another player.") - the "rare currency" flavor text was removed.
 
 ## [1.1.0] - 2026-08-03
 

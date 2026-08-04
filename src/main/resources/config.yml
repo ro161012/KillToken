@@ -41,16 +41,11 @@ killstreak:
 # replace it with whatever you are holding (persisted automatically).
 
 # ------------------------------------------------------------
-#  Compressed Kill Token Blocks
+#  Compressed Kill Token Block
 # ------------------------------------------------------------
-# Nine Kill Tokens craft into one Compressed Kill Token Block, and nine
-# of those into a Compressed Compressed Kill Token Block (81 tokens).
-# Both craft back into their components, so no tokens are ever lost.
-# The blocks use quartz-style materials so they read as "token-like" at
-# a glance.
+# A single Compressed Kill Token Block holds 64 Kill Tokens. There are
+# no crafting recipes - wire the block into your own trading instead
+# (e.g. custom villager trades).
 compressed-blocks:
-  enabled: true
-  # Material of the Compressed Kill Token Block (9 tokens).
+  # Material of the Compressed Kill Token Block (64 tokens).
   compressed-block-material: QUARTZ_BLOCK
-  # Material of the Compressed Compressed Kill Token Block (81 tokens).
-  compressed-compressed-block-material: SMOOTH_QUARTZ
