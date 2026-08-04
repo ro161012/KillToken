@@ -67,11 +67,11 @@ damage**:
 
 | Death cause | Token drops? |
 |---|---|
-| Melee kill by a player | ✅ Yes |
-| Arrow / trident / projectile shot by a player | ✅ Yes (shooter is resolved as the killer) |
-| Killed by a mob (zombie, creeper, …) | ❌ No |
-| Fall damage, lava, drowning, void, fire, explosions | ❌ No |
-| Suicide (`/kill`) | ❌ No |
+| Melee kill by a player | Yes |
+| Arrow / trident / projectile shot by a player | Yes (shooter is resolved as the killer) |
+| Killed by a mob (zombie, creeper, …) | No |
+| Fall damage, lava, drowning, void, fire, explosions | No |
+| Suicide (`/kill`) | No |
 
 In every case where a token drops, it spawns as a physical item entity on the
 floor at the death location — never directly in an inventory.
@@ -230,9 +230,3 @@ follow the [code of conduct](CODE_OF_CONDUCT.md). For security issues, see
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-
----
-
-<div align="center">
-  Made with care by <a href="https://github.com/ro161012">ro161012</a>.
-</div>

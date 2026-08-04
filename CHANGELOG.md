@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/killtoken give [player] [amount]` for handing out tokens, e.g. for
   rewards or manual payouts (`killtoken.give` permission). Tokens always
   spawn as physical drops on the floor at the target's feet - never directly
-  into an inventory. Amounts are validated against 1&ndash;2304.
+  into an inventory. Amounts are validated against 1-2304.
 - Fine-grained permissions: `killtoken.set`, `killtoken.give` and
   `killtoken.reload`, all children of `killtoken.admin`.
 - MockBukkit-based integration test suite covering the plugin lifecycle,
