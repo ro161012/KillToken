@@ -1,0 +1,51 @@
+name: KillToken checks
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+jobs:
+  build:
+    name: Check KillToken
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the project files
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build and test KillToken
+        run: mvn -B -ntp verify
+
+      - name: Save the plugin jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: KillToken
+          path: target/KillToken-*.jar
+          if-no-files-found: error
+
+  release:
+    name: Publish release files
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Get the plugin jar
+        uses: actions/download-artifact@v4
+        with:
+          name: KillToken
+          path: dist
+
+      - name: Add the jar to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/KillToken-*.jar

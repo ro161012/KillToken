@@ -1,0 +1,44 @@
+name: Bug report
+description: Report a problem with KillToken.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: KillToken version
+      description: Shown in /plugins or at server startup.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: server
+    attributes:
+      label: Server software & version
+      description: Output of /version.
+      placeholder: "Paper 1.21.4-123"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the expected behaviour and what actually happened.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Player A kills Player B
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs / stack traces
+      render: shell
+    validations:
+      required: false
