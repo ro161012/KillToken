@@ -5,7 +5,7 @@ All notable changes to KillToken are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.0] - 2026-08-03
 
 ### Added
 
@@ -15,27 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   kill. Fully configurable (`killstreak.*`): enable flag, message, sound,
   base pitch, per-kill pitch step and pitch cap. Streaks reset on death from
   any cause and on disconnect.
-- `/killtoken give [player] [amount]` for handing out tokens directly, e.g.
-  for rewards or manual payouts (`killtoken.give` permission). Items that do
-  not fit in the target's inventory are dropped at their feet instead of
-  being deleted. Amounts are validated against 1&ndash;2304.
+- `/killtoken give [player] [amount]` for handing out tokens, e.g. for
+  rewards or manual payouts (`killtoken.give` permission). Tokens always
+  spawn as physical drops on the floor at the target's feet - never directly
+  into an inventory. Amounts are validated against 1&ndash;2304.
 - Fine-grained permissions: `killtoken.set`, `killtoken.give` and
   `killtoken.reload`, all children of `killtoken.admin`.
-- MockBukkit-based integration test suite (26 tests) covering the plugin
-  lifecycle, configuration seeding, every command path, permissions, the kill
-  flow and the pair-based anti-farming cooldown.
+- MockBukkit-based integration test suite covering the plugin lifecycle,
+  configuration seeding, every command path, permissions, the kill flow, the
+  pair-based anti-farming cooldown, killstreak counting and the progressive
+  sound pitch (35 tests total).
 - Checkstyle enforcement in the Maven build (`config/checkstyle.xml`).
 - Maven wrapper (`./mvnw`) for reproducible builds.
-- Nine new tests for killstreak counting, per-player isolation, reset
-  behaviour and the progressive sound pitch (35 tests total).
-
-### Changed
-
-- Tokens are now **always physical floor drops**: `/killtoken give` spawns
-  the items at the target's feet instead of adding them to the inventory,
-  matching the kill-drop behaviour.
-- `/killtoken give` no longer caps delivery at inventory capacity - any
-  amount from 1 to 2304 drops on the floor.
 
 ### Changed
 
