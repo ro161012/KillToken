@@ -19,6 +19,9 @@ import org.bukkit.inventory.meta.ItemMeta;
  *
  * <p>No crafting recipes are provided: servers wire the block into their
  * own trading systems (e.g. custom villager trades).
+ *
+ * <p>The item template is built once and cloned per use, so command paths
+ * and listeners never rebuild item metadata.
  */
 public final class CompressedBlockManager {
 
@@ -31,7 +34,12 @@ public final class CompressedBlockManager {
     /** Configuration section for the compressed block feature. */
     public static final String CONFIG_SECTION = "compressed-blocks";
 
+    private static final Material DEFAULT_MATERIAL = Material.QUARTZ_BLOCK;
+
     private final KillTokenPlugin plugin;
+
+    private Material material = DEFAULT_MATERIAL;
+    private ItemStack template;
 
     /**
      * Creates the manager for the owning plugin.
@@ -43,14 +51,36 @@ public final class CompressedBlockManager {
     }
 
     /**
+     * Re-reads the configured material and rebuilds the item template.
+     * Called on enable and on every config reload.
+     */
+    public void refresh() {
+        this.material = resolveMaterial("compressed-block-material", DEFAULT_MATERIAL);
+        this.template = build(this.material);
+    }
+
+    /**
      * Creates a Compressed Kill Token Block holding
      * {@value #COMPRESS_RATIO} tokens.
      *
      * @return the compressed block item
      */
     public ItemStack createCompressedBlock() {
-        final ItemStack stack = new ItemStack(
-                material("compressed-block-material", Material.QUARTZ_BLOCK));
+        if (template == null) {
+            refresh();
+        }
+        return template.clone();
+    }
+
+    /**
+     * Builds the item template: a quartz-style block with the enchanted
+     * glint and a lore stating the stored value.
+     *
+     * @param material the configured block material
+     * @return the finished item
+     */
+    private ItemStack build(final Material material) {
+        final ItemStack stack = new ItemStack(material);
         final ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(KillTokenPlugin.color("&6" + DISPLAY_NAME));
@@ -74,7 +104,7 @@ public final class CompressedBlockManager {
      * @param fallback material used when the value is missing or unknown
      * @return the configured material
      */
-    private Material material(final String path, final Material fallback) {
+    private Material resolveMaterial(final String path, final Material fallback) {
         final String name = plugin.getConfig()
                 .getString(CONFIG_SECTION + "." + path, fallback.name());
         try {

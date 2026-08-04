@@ -14,6 +14,10 @@ import org.bukkit.inventory.meta.ItemMeta;
  */
 public final class CompressedBlockListener implements Listener {
 
+    /** Pre-colourised placement rejection message (translated once). */
+    private static final String PLACE_REJECTED = KillTokenPlugin.color(
+            "&cCompressed Kill Token Blocks cannot be placed - use them for trading.");
+
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBlockPlace(final BlockPlaceEvent event) {
         final ItemMeta meta = event.getItemInHand().getItemMeta();
@@ -24,7 +28,6 @@ public final class CompressedBlockListener implements Listener {
             return;
         }
         event.setCancelled(true);
-        event.getPlayer().sendMessage(KillTokenPlugin.color(
-                "&cCompressed Kill Token Blocks cannot be placed - use them for trading."));
+        event.getPlayer().sendMessage(PLACE_REJECTED);
     }
 }

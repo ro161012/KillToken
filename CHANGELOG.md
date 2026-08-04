@@ -5,6 +5,20 @@ All notable changes to KillToken are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-08-04
+
+### Performance
+
+- All configuration-derived values (drop amount, cooldown length, messages,
+  killstreak settings and sound) are now resolved once when the config is
+  loaded or reloaded and cached; death events and commands no longer re-parse
+  YAML, enum names or color codes.
+- The Compressed Kill Token Block item template is built once and cloned per
+  use instead of being rebuilt with new item metadata on every call.
+- The placement-rejection message is colorised once at class load.
+
+No behavioral changes; this release is purely internal optimization.
+
 ## [1.2.1] - 2026-08-04
 
 ### Changed

@@ -2,7 +2,6 @@ package dev.ro161012.killtoken;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.logging.Level;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -20,6 +19,10 @@ import org.bukkit.plugin.java.JavaPlugin;
  * <p>KillToken drops a configurable currency item whenever a player kills
  * another player, and applies a pair-based cooldown to prevent token farming
  * between the same two players.
+ *
+ * <p>All configuration-derived values are resolved once when the config is
+ * loaded or reloaded and cached in fields, so hot paths (death events,
+ * commands) never re-parse YAML, enum names or color codes.
  */
 public class KillTokenPlugin extends JavaPlugin {
 
@@ -28,17 +31,32 @@ public class KillTokenPlugin extends JavaPlugin {
 
     private PairCooldown pairCooldown;
     private KillstreakTracker killstreakTracker;
-    private ItemStack currencyItem;
     private CompressedBlockManager compressedBlocks;
+    private ItemStack currencyItem;
+
+    // Cached configuration values (refreshed by refreshConfigCache()).
+    private int tokensPerKill;
+    private long cooldownSeconds;
+    private boolean notifyOnCooldown;
+    private String cooldownMessage;
+    private String killMessage;
+    private boolean killstreakEnabled;
+    private String killstreakMessage;
+    private Sound killstreakSound;
+    private float killstreakBasePitch;
+    private float killstreakPitchPerKill;
+    private float killstreakMaxPitch;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        refreshConfigCache();
 
-        this.pairCooldown = new PairCooldown(getCooldownSeconds());
+        this.pairCooldown = new PairCooldown(cooldownSeconds);
         this.killstreakTracker = new KillstreakTracker(this);
         this.compressedBlocks = new CompressedBlockManager(this);
         loadCurrencyItem();
+        compressedBlocks.refresh();
 
         getServer().getPluginManager().registerEvents(new KillListener(this), this);
         getServer().getPluginManager().registerEvents(new CompressedBlockListener(), this);
@@ -51,7 +69,7 @@ public class KillTokenPlugin extends JavaPlugin {
         }
 
         getLogger().info("KillToken enabled (currency: " + currencyItem.getType()
-                + ", pair cooldown: " + getCooldownSeconds() + "s).");
+                + ", pair cooldown: " + cooldownSeconds + "s).");
     }
 
     @Override
@@ -61,7 +79,7 @@ public class KillTokenPlugin extends JavaPlugin {
 
     /**
      * Reloads configuration values from disk. The currency item is re-read
-     * and the pair cooldown duration is updated.
+     * and the cached configuration values are refreshed.
      */
     public void reload() {
         reloadConfig();
@@ -71,11 +89,14 @@ public class KillTokenPlugin extends JavaPlugin {
 
     /**
      * Re-applies the current in-memory configuration to runtime state: the
-     * currency item is re-read and the pair cooldown duration is updated.
+     * currency item, the cached configuration values, the pair cooldown
+     * duration and the compressed block template are refreshed.
      */
     public void applyConfig() {
         loadCurrencyItem();
-        pairCooldown.setCooldownSeconds(getCooldownSeconds());
+        refreshConfigCache();
+        pairCooldown.setCooldownSeconds(cooldownSeconds);
+        compressedBlocks.refresh();
     }
 
     /**
@@ -92,7 +113,36 @@ public class KillTokenPlugin extends JavaPlugin {
         this.currencyItem = createDefaultToken();
         config.set(CURRENCY_PATH, currencyItem);
         saveConfig();
-        getLogger().log(Level.FINE, "Seeded default currency item (NETHER_STAR).");
+        getLogger().fine("Seeded default currency item (NETHER_STAR).");
+    }
+
+    /**
+     * Reads every config value used at runtime into fields, so hot paths
+     * only touch fields. Called on enable and on every reload.
+     */
+    private void refreshConfigCache() {
+        final FileConfiguration config = getConfig();
+
+        this.tokensPerKill = Math.max(1, config.getInt("tokens-per-kill", 1));
+        this.cooldownSeconds = config.getLong("cooldown-seconds", 60L);
+        this.notifyOnCooldown = config.getBoolean("notify-on-cooldown", true);
+        this.cooldownMessage = color(config.getString("cooldown-message",
+                "&cNo Kill Token dropped - you and this player are on cooldown."));
+        this.killMessage = color(config.getString("kill-message", "&6+1 Kill Token"));
+
+        this.killstreakEnabled = config.getBoolean("killstreak.enabled", true);
+        this.killstreakMessage = config.getString(
+                "killstreak.message", "&6Killstreak&8: &f%streak%");
+        final String soundName = config.getString(
+                "killstreak.sound", "ENTITY_EXPERIENCE_ORB_PICKUP");
+        try {
+            this.killstreakSound = Sound.valueOf(soundName.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            this.killstreakSound = Sound.ENTITY_EXPERIENCE_ORB_PICKUP;
+        }
+        this.killstreakBasePitch = (float) config.getDouble("killstreak.base-pitch", 0.7);
+        this.killstreakPitchPerKill = (float) config.getDouble("killstreak.pitch-per-kill", 0.15);
+        this.killstreakMaxPitch = (float) config.getDouble("killstreak.max-pitch", 2.0);
     }
 
     /**
@@ -119,7 +169,7 @@ public class KillTokenPlugin extends JavaPlugin {
      * @return the token item stack to drop
      */
     public ItemStack createToken() {
-        return createToken(getTokensPerKill());
+        return createToken(tokensPerKill);
     }
 
     /**
@@ -189,7 +239,7 @@ public class KillTokenPlugin extends JavaPlugin {
      * @return true if enabled
      */
     public boolean killstreakEnabled() {
-        return getConfig().getBoolean("killstreak.enabled", true);
+        return killstreakEnabled;
     }
 
     /**
@@ -199,22 +249,16 @@ public class KillTokenPlugin extends JavaPlugin {
      * @return message template
      */
     public String getKillstreakMessage() {
-        return getConfig().getString("killstreak.message", "&6Killstreak&8: &f%streak%");
+        return killstreakMessage;
     }
 
     /**
-     * Returns the configured killstreak sound, falling back to the
-     * experience-orb pickup sound for invalid names.
+     * Returns the configured killstreak sound, resolved once at config load.
      *
      * @return the sound to play
      */
     public Sound getKillstreakSound() {
-        final String name = getConfig().getString("killstreak.sound", "ENTITY_EXPERIENCE_ORB_PICKUP");
-        try {
-            return Sound.valueOf(name.toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException e) {
-            return Sound.ENTITY_EXPERIENCE_ORB_PICKUP;
-        }
+        return killstreakSound;
     }
 
     /**
@@ -223,7 +267,7 @@ public class KillTokenPlugin extends JavaPlugin {
      * @return base pitch
      */
     public float getKillstreakBasePitch() {
-        return (float) getConfig().getDouble("killstreak.base-pitch", 0.7);
+        return killstreakBasePitch;
     }
 
     /**
@@ -232,7 +276,7 @@ public class KillTokenPlugin extends JavaPlugin {
      * @return pitch step per kill
      */
     public float getKillstreakPitchPerKill() {
-        return (float) getConfig().getDouble("killstreak.pitch-per-kill", 0.15);
+        return killstreakPitchPerKill;
     }
 
     /**
@@ -241,7 +285,7 @@ public class KillTokenPlugin extends JavaPlugin {
      * @return pitch cap
      */
     public float getKillstreakMaxPitch() {
-        return (float) getConfig().getDouble("killstreak.max-pitch", 2.0);
+        return killstreakMaxPitch;
     }
 
     /**
@@ -250,16 +294,16 @@ public class KillTokenPlugin extends JavaPlugin {
      * @return cooldown length in seconds
      */
     public long getCooldownSeconds() {
-        return getConfig().getLong("cooldown-seconds", 60L);
+        return cooldownSeconds;
     }
 
     /**
      * Returns the configured number of tokens dropped per qualifying kill.
      *
-     * @return tokens per kill (always at least 1 when used)
+     * @return tokens per kill (always at least 1)
      */
     public int getTokensPerKill() {
-        return getConfig().getInt("tokens-per-kill", 1);
+        return tokensPerKill;
     }
 
     /**
@@ -269,7 +313,7 @@ public class KillTokenPlugin extends JavaPlugin {
      * @return true if the notification is enabled
      */
     public boolean notifyOnCooldown() {
-        return getConfig().getBoolean("notify-on-cooldown", true);
+        return notifyOnCooldown;
     }
 
     /**
@@ -278,8 +322,7 @@ public class KillTokenPlugin extends JavaPlugin {
      * @return cooldown message
      */
     public String getCooldownMessage() {
-        return color(getConfig().getString("cooldown-message",
-                "&cNo Kill Token dropped - you and this player are on cooldown."));
+        return cooldownMessage;
     }
 
     /**
@@ -289,7 +332,7 @@ public class KillTokenPlugin extends JavaPlugin {
      * @return kill message
      */
     public String getKillMessage() {
-        return color(getConfig().getString("kill-message", "&6+1 Kill Token"));
+        return killMessage;
     }
 
     /**

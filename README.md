@@ -54,6 +54,9 @@ trades, crates, or any other economy you build on top of it.
   No crafting recipes; you wire it into your own economy.
 - **Configurable** — drop amount, cooldown length, and all messages live in
   `config.yml`.
+- **Lightweight at runtime** — configuration and item templates are cached
+  and resolved once; kill events never re-parse config, sound names or color
+  codes.
 - **Zero dependencies** — no libraries to install, works out of the box.
 
 ## How it works
