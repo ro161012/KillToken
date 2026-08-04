@@ -6,6 +6,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 /**
  * Spawns the Kill Token when a player is killed by another player, subject
@@ -35,6 +36,9 @@ public final class KillListener implements Listener {
         final Player victim = event.getEntity();
         final Player killer = victim.getKiller();
 
+        // Any death ends the victim's killstreak, regardless of the cause.
+        plugin.getKillstreakTracker().reset(victim.getUniqueId());
+
         // Strict PvP requirement: a token only drops when another player
         // is responsible for the killing damage.
         if (!isPlayerKill(victim, killer)) {
@@ -54,6 +58,9 @@ public final class KillListener implements Listener {
 
         cooldown.apply(killer.getUniqueId(), victim.getUniqueId());
 
+        // Consecutive PvP kills build the killer's killstreak.
+        plugin.getKillstreakTracker().increment(killer);
+
         final Location deathLocation = victim.getLocation();
         victim.getWorld().dropItemNaturally(deathLocation, plugin.createToken());
 
@@ -61,6 +68,16 @@ public final class KillListener implements Listener {
         if (!killMessage.isEmpty()) {
             killer.sendMessage(killMessage);
         }
+    }
+
+    /**
+     * Clears the leaver's killstreak so streaks never survive a disconnect.
+     *
+     * @param event the quit event
+     */
+    @EventHandler
+    public void onPlayerQuit(final PlayerQuitEvent event) {
+        plugin.getKillstreakTracker().reset(event.getPlayer().getUniqueId());
     }
 
     /**

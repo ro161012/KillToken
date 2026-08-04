@@ -17,6 +17,23 @@ cooldown-message: "&cNo Kill Token dropped - you and this player are on cooldown
 kill-message: "&6+1 Kill Token"
 
 # ------------------------------------------------------------
+#  Killstreaks
+# ------------------------------------------------------------
+# Consecutive PvP kills build a streak. Each kill shows a short counter on
+# the action bar (the text above the hotbar, between health and hunger) and
+# plays a sound whose pitch rises the higher the streak goes. Streaks reset
+# on death (any cause) and on disconnect.
+killstreak:
+  enabled: true
+  # %streak% is replaced with the current streak length.
+  message: "&6Killstreak&8: &f%streak%"
+  # Any org.bukkit.Sound name.
+  sound: ENTITY_EXPERIENCE_ORB_PICKUP
+  base-pitch: 0.7
+  pitch-per-kill: 0.15
+  max-pitch: 2.0
+
+# ------------------------------------------------------------
 #  Currency item
 # ------------------------------------------------------------
 # The item below is dropped as the Kill Token. It is seeded with a

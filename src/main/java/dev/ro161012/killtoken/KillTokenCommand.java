@@ -2,7 +2,6 @@ package dev.ro161012.killtoken;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -136,18 +135,14 @@ public final class KillTokenCommand implements TabExecutor {
     }
 
     /**
-     * Adds the tokens to the target's inventory and drops any overflow at
-     * their feet instead of silently deleting items.
+     * Spawns the tokens on the floor at the target's feet. Tokens are never
+     * placed directly into an inventory - they are always physical drops.
      *
      * @param target receiving player
      * @param amount number of tokens to hand out
      */
     private void deliver(final Player target, final int amount) {
-        final Map<Integer, ItemStack> overflow =
-                target.getInventory().addItem(plugin.createToken(amount));
-        for (final ItemStack remainder : overflow.values()) {
-            target.getWorld().dropItemNaturally(target.getLocation(), remainder);
-        }
+        target.getWorld().dropItemNaturally(target.getLocation(), plugin.createToken(amount));
     }
 
     private void handleReload(final CommandSender sender) {

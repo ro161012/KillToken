@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 
 import org.bukkit.Material;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Item;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,14 +37,13 @@ final class KillTokenCommandTest {
         MockBukkit.unmock();
     }
 
-    private static int countTokens(final PlayerMock player) {
-        int count = 0;
-        for (final ItemStack stack : player.getInventory().getContents()) {
-            if (stack != null && stack.getType() == Material.NETHER_STAR) {
-                count += stack.getAmount();
-            }
-        }
-        return count;
+    private int tokensOnFloor() {
+        return server.getWorlds().get(0).getEntities().stream()
+                .filter(entity -> entity.getType() == EntityType.ITEM)
+                .map(Item.class::cast)
+                .filter(item -> item.getItemStack().getType() == Material.NETHER_STAR)
+                .mapToInt(item -> item.getItemStack().getAmount())
+                .sum();
     }
 
     @Test
@@ -77,7 +78,9 @@ final class KillTokenCommandTest {
 
         player.performCommand("killtoken give");
 
-        assertEquals(1, countTokens(player));
+        assertEquals(1, tokensOnFloor());
+        assertFalse(player.getInventory().contains(Material.NETHER_STAR),
+                "tokens are dropped on the floor, never placed into inventories");
     }
 
     @Test
@@ -89,8 +92,8 @@ final class KillTokenCommandTest {
 
         sender.performCommand("killtoken give " + target.getName() + " 3");
 
-        assertEquals(3, countTokens(target));
-        assertEquals(0, countTokens(sender));
+        assertEquals(3, tokensOnFloor());
+        assertFalse(target.getInventory().contains(Material.NETHER_STAR));
     }
 
     @Test
@@ -100,7 +103,7 @@ final class KillTokenCommandTest {
 
         server.dispatchCommand(server.getConsoleSender(), "killtoken give " + target.getName() + " 2");
 
-        assertEquals(2, countTokens(target));
+        assertEquals(2, tokensOnFloor());
     }
 
     @Test
@@ -111,7 +114,7 @@ final class KillTokenCommandTest {
 
         player.performCommand("killtoken give NoSuchPlayer 1");
 
-        assertEquals(0, countTokens(player));
+        assertEquals(0, tokensOnFloor());
     }
 
     @Test
@@ -124,7 +127,7 @@ final class KillTokenCommandTest {
         player.performCommand("killtoken give " + player.getName() + " " + (KillTokenCommand.MAX_GIVE_AMOUNT + 1));
         player.performCommand("killtoken give " + player.getName() + " bananas");
 
-        assertEquals(0, countTokens(player));
+        assertEquals(0, tokensOnFloor());
     }
 
     @Test
@@ -135,7 +138,7 @@ final class KillTokenCommandTest {
 
         player.performCommand("killtoken give");
 
-        assertEquals(0, countTokens(player));
+        assertEquals(0, tokensOnFloor());
     }
 
     @Test

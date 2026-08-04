@@ -1,10 +1,12 @@
 package dev.ro161012.killtoken;
 
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.logging.Level;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemFlag;
@@ -25,6 +27,7 @@ public class KillTokenPlugin extends JavaPlugin {
     public static final String CURRENCY_PATH = "currency-item";
 
     private PairCooldown pairCooldown;
+    private KillstreakTracker killstreakTracker;
     private ItemStack currencyItem;
 
     @Override
@@ -32,6 +35,7 @@ public class KillTokenPlugin extends JavaPlugin {
         saveDefaultConfig();
 
         this.pairCooldown = new PairCooldown(getCooldownSeconds());
+        this.killstreakTracker = new KillstreakTracker(this);
         loadCurrencyItem();
 
         getServer().getPluginManager().registerEvents(new KillListener(this), this);
@@ -158,6 +162,76 @@ public class KillTokenPlugin extends JavaPlugin {
      */
     public PairCooldown getPairCooldown() {
         return pairCooldown;
+    }
+
+    /**
+     * Returns the killstreak tracker.
+     *
+     * @return the killstreak tracker
+     */
+    public KillstreakTracker getKillstreakTracker() {
+        return killstreakTracker;
+    }
+
+    /**
+     * Whether killstreak announcements (action bar + sound) are enabled.
+     *
+     * @return true if enabled
+     */
+    public boolean killstreakEnabled() {
+        return getConfig().getBoolean("killstreak.enabled", true);
+    }
+
+    /**
+     * Returns the raw killstreak action-bar message with the
+     * {@code %streak%} placeholder.
+     *
+     * @return message template
+     */
+    public String getKillstreakMessage() {
+        return getConfig().getString("killstreak.message", "&6Killstreak&8: &f%streak%");
+    }
+
+    /**
+     * Returns the configured killstreak sound, falling back to the
+     * experience-orb pickup sound for invalid names.
+     *
+     * @return the sound to play
+     */
+    public Sound getKillstreakSound() {
+        final String name = getConfig().getString("killstreak.sound", "ENTITY_EXPERIENCE_ORB_PICKUP");
+        try {
+            return Sound.valueOf(name.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return Sound.ENTITY_EXPERIENCE_ORB_PICKUP;
+        }
+    }
+
+    /**
+     * Returns the pitch of the killstreak sound at a streak of one.
+     *
+     * @return base pitch
+     */
+    public float getKillstreakBasePitch() {
+        return (float) getConfig().getDouble("killstreak.base-pitch", 0.7);
+    }
+
+    /**
+     * Returns how much the pitch rises per consecutive kill.
+     *
+     * @return pitch step per kill
+     */
+    public float getKillstreakPitchPerKill() {
+        return (float) getConfig().getDouble("killstreak.pitch-per-kill", 0.15);
+    }
+
+    /**
+     * Returns the maximum pitch the killstreak sound can reach.
+     *
+     * @return pitch cap
+     */
+    public float getKillstreakMaxPitch() {
+        return (float) getConfig().getDouble("killstreak.max-pitch", 2.0);
     }
 
     /**

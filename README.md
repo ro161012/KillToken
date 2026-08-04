@@ -40,6 +40,13 @@ trades, crates, or any other economy you build on top of it.
   and lore), so it always looks the same and is easy to identify.
 - **Anti-farming cooldowns** — a pair-based cooldown stops two players from
   trading kills to print tokens (see below).
+- **Killstreaks** — consecutive PvP kills build a streak, announced on the
+  action bar (the text above the hotbar, between health and hunger) with a
+  sound whose pitch rises the higher the streak goes. Streaks reset on death
+  or disconnect.
+- **Always physical drops** — tokens always spawn on the floor, whether from
+  a kill or from `/killtoken give`; they are never placed directly into an
+  inventory.
 - **Runtime currency customization** — change the token to *any* item in the
   game with a single command. No config editing, no restart.
 - **Configurable** — drop amount, cooldown length, and all messages live in
@@ -65,6 +72,9 @@ damage**:
 | Killed by a mob (zombie, creeper, …) | ❌ No |
 | Fall damage, lava, drowning, void, fire, explosions | ❌ No |
 | Suicide (`/kill`) | ❌ No |
+
+In every case where a token drops, it spawns as a physical item entity on the
+floor at the death location — never directly in an inventory.
 
 The check is based on Paper's `Player#getKiller()`, which returns the player
 who dealt the killing damage — or `null` for every non-player cause — plus an
@@ -102,7 +112,7 @@ This shuts down mutual kill-farming without penalizing legitimate PvP.
 | Command | Description | Permission | Default |
 |---------|-------------|-----------|---------|
 | `/killtoken set` | Sets the item in your **main hand** as the new Kill Token currency. All future drops use it. | `killtoken.set` | `op` |
-| `/killtoken give [player] [amount]` | Hands out tokens directly (defaults to yourself, 1 token). Overflow that doesn't fit in the inventory is dropped at the player's feet. | `killtoken.give` | `op` |
+| `/killtoken give [player] [amount]` | Spawns tokens on the floor at a player's feet (defaults to yourself, 1 token). | `killtoken.give` | `op` |
 | `/killtoken reload` | Reloads `config.yml`. | `killtoken.reload` | `op` |
 
 All subcommands are tab-completed (including online player names and amounts for `give`).
@@ -141,6 +151,23 @@ held item (including its name, lore, and enchantments) is persisted there.
 
 Color codes use the `&` prefix (e.g. `&6`, `&c`, `&l`).
 
+### Killstreaks
+
+```yaml
+killstreak:
+  enabled: true
+  message: "&6Killstreak&8: &f%streak%"   # %streak% = current streak length
+  sound: ENTITY_EXPERIENCE_ORB_PICKUP      # any org.bukkit.Sound name
+  base-pitch: 0.7                          # pitch at a streak of 1
+  pitch-per-kill: 0.15                     # rise per consecutive kill
+  max-pitch: 2.0                           # pitch cap
+```
+
+Every PvP kill shows the counter on the action bar for about a second and
+plays the configured sound; the pitch climbs with each consecutive kill so a
+rampage literally sounds different from a single kill. A streak ends when its
+owner dies (any cause) or leaves the server.
+
 ## Building from source
 
 Requires **Java 21+**. Maven is provided by the wrapper, so nothing else needs
@@ -170,6 +197,7 @@ produced at `target/KillToken-<version>.jar`.
 │   │   │   ├── KillTokenPlugin.java         Main class, config + currency item
 │   │   │   ├── KillListener.java            Death event -> token drop logic
 │   │   │   ├── PairCooldown.java            Symmetric pair-cooldown tracker
+│   │   │   ├── KillstreakTracker.java       Streak counter, action bar, pitch
 │   │   │   └── KillTokenCommand.java        /killtoken set|give|reload
 │   │   └── resources/
 │   │       ├── plugin.yml                   Plugin metadata
@@ -179,7 +207,8 @@ produced at `target/KillToken-<version>.jar`.
 │           ├── PairCooldownTest.java        Cooldown unit tests
 │           ├── KillTokenPluginTest.java     Lifecycle & config integration tests
 │           ├── KillTokenCommandTest.java    Command integration tests
-│           └── KillListenerTest.java        Kill-flow integration tests
+│           ├── KillListenerTest.java        Kill-flow integration tests
+│           └── KillstreakTrackerTest.java   Killstreak & pitch tests
 └── .github/workflows/build.yml              CI build & test
 ```
 

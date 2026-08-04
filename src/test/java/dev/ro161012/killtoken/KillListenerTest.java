@@ -120,6 +120,44 @@ final class KillListenerTest {
     }
 
     @Test
+    @DisplayName("PvP kills build the killer's killstreak")
+    void pvpKillsBuildKillstreak() {
+        final PlayerMock killer = server.addPlayer();
+
+        firePlayerKill(server.addPlayer(), killer);
+        assertEquals(1, plugin.getKillstreakTracker().get(killer.getUniqueId()));
+
+        firePlayerKill(server.addPlayer(), killer);
+        assertEquals(2, plugin.getKillstreakTracker().get(killer.getUniqueId()));
+    }
+
+    @Test
+    @DisplayName("dying resets the victim's killstreak")
+    void dyingResetsVictimStreak() {
+        final PlayerMock a = server.addPlayer();
+        final PlayerMock b = server.addPlayer();
+
+        firePlayerKill(a, b); // b scores a kill
+        assertEquals(1, plugin.getKillstreakTracker().get(b.getUniqueId()));
+
+        firePlayerKill(b, a); // b dies
+        assertEquals(0, plugin.getKillstreakTracker().get(b.getUniqueId()));
+    }
+
+    @Test
+    @DisplayName("disconnecting resets the killstreak")
+    void disconnectResetsKillstreak() {
+        final PlayerMock killer = server.addPlayer();
+        firePlayerKill(server.addPlayer(), killer);
+        assertEquals(1, plugin.getKillstreakTracker().get(killer.getUniqueId()));
+
+        server.getPluginManager().callEvent(
+                new org.bukkit.event.player.PlayerQuitEvent(killer, "left"));
+
+        assertEquals(0, plugin.getKillstreakTracker().get(killer.getUniqueId()));
+    }
+
+    @Test
     @DisplayName("the dropped item is the configured currency")
     void droppedItemIsTheCurrency() {
         plugin.setCurrencyItem(new org.bukkit.inventory.ItemStack(Material.GOLD_INGOT));
