@@ -25,7 +25,7 @@ kill-message: "&6+1 Kill Token"
 killstreak:
   enabled: true
   # %player% is the killer's name; %streak% is their current streak.
-  message: "&c%player% &7is on a &6%streak% &7killstreak!"
+  message: "&c%player% &6is on a &e%streak% &ekillstreak!"
   # Any org.bukkit.Sound name. It plays only for the streak owner at pitch 1.0.
   sound: ENTITY_EXPERIENCE_ORB_PICKUP
   # No chat or sound at streak 1. Announce every qualifying kill from 2 onward.

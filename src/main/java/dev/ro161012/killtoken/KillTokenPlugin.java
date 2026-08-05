@@ -33,8 +33,9 @@ public class KillTokenPlugin extends JavaPlugin {
     private static final String DEFAULT_TOKEN_NAME = "Kill Token";
     private static final String DEFAULT_TOKEN_LORE = "Awarded for killing another player.";
     private static final String LEGACY_DEFAULT_TOKEN_LORE = "Awarded for slaying another player.";
-    private static final String DEFAULT_KILLSTREAK_MESSAGE = "&c%player% &7is on a &6%streak% &7killstreak!";
+    private static final String DEFAULT_KILLSTREAK_MESSAGE = "&c%player% &6is on a &e%streak% &ekillstreak!";
     private static final String LEGACY_KILLSTREAK_MESSAGE = "&6Killstreak&8: &f%streak%";
+    private static final String PREVIOUS_KILLSTREAK_MESSAGE = "&c%player% &7is on a &6%streak% &7killstreak!";
     private static final int MAX_KILLSTREAK_TOKEN_MULTIPLIER = 5;
 
     private PairCooldown pairCooldown;
@@ -174,7 +175,9 @@ public class KillTokenPlugin extends JavaPlugin {
      */
     private void migrateKillstreakConfig(final FileConfiguration config) {
         boolean changed = false;
-        if (LEGACY_KILLSTREAK_MESSAGE.equals(config.getString("killstreak.message"))) {
+        final String configuredMessage = config.getString("killstreak.message");
+        if (LEGACY_KILLSTREAK_MESSAGE.equals(configuredMessage)
+                || PREVIOUS_KILLSTREAK_MESSAGE.equals(configuredMessage)) {
             config.set("killstreak.message", DEFAULT_KILLSTREAK_MESSAGE);
             changed = true;
         }

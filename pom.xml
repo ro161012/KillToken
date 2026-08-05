@@ -6,7 +6,7 @@
 
     <groupId>dev.ro161012</groupId>
     <artifactId>killtoken</artifactId>
-    <version>1.2.6</version>
+    <version>1.2.7</version>
     <packaging>jar</packaging>
 
     <name>KillToken</name>

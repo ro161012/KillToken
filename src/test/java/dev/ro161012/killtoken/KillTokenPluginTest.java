@@ -73,9 +73,9 @@ final class KillTokenPluginTest {
     }
 
     @Test
-    @DisplayName("old killstreak settings migrate to chat announcements and multipliers")
+    @DisplayName("stock killstreak settings migrate to static red-orange-yellow chat")
     void legacyKillstreakSettingsAreMigrated() {
-        plugin.getConfig().set("killstreak.message", "&6Killstreak&8: &f%streak%");
+        plugin.getConfig().set("killstreak.message", "&c%player% &7is on a &6%streak% &7killstreak!");
         plugin.getConfig().set("killstreak.announcement-minimum", null);
         plugin.getConfig().set("killstreak.reward-start", null);
         plugin.getConfig().set("killstreak.reward-step", null);
@@ -83,7 +83,9 @@ final class KillTokenPluginTest {
 
         plugin.applyConfig();
 
-        assertTrue(plugin.getKillstreakMessage().contains("is on a"));
+        assertTrue(plugin.getKillstreakMessage().contains(ChatColor.RED + "%player%"));
+        assertTrue(plugin.getKillstreakMessage().contains(ChatColor.GOLD + "is on a"));
+        assertTrue(plugin.getKillstreakMessage().contains(ChatColor.YELLOW + "%streak%"));
         assertEquals(2, plugin.getKillstreakAnnouncementMinimum());
         assertEquals(3, plugin.getKillstreakRewardStart());
         assertEquals(2, plugin.getKillstreakTokenMultiplier(3));

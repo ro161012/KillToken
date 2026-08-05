@@ -5,6 +5,14 @@ All notable changes to KillToken are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.7] - 2026-08-04
+
+### Changed
+
+- Killstreak chat messages now use a static red-to-orange-to-yellow colour
+  progression: red player name, orange wording, and yellow streak count and
+  label. No colour animation is used.
+
 ## [1.2.6] - 2026-08-04
 
 ### Changed
