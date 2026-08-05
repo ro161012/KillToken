@@ -1,6 +1,7 @@
 package dev.ro161012.killtoken;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.AfterEach;
@@ -12,7 +13,7 @@ import org.mockbukkit.mockbukkit.ServerMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
 
 /**
- * Tests for the killstreak counter and its progressive sound pitch.
+ * Tests for the killstreak counter and reward milestones.
  */
 final class KillstreakTrackerTest {
 
@@ -71,37 +72,25 @@ final class KillstreakTrackerTest {
     }
 
     @Test
-    @DisplayName("pitch rises with the streak and is clamped at the configured maximum")
-    void pitchIsProgressiveAndClamped() {
-        final KillstreakTracker tracker = plugin.getKillstreakTracker();
-        // defaults: base 0.7, +0.15 per kill, max 2.0
-
-        final float first = tracker.pitchFor(1);
-        final float second = tracker.pitchFor(2);
-        final float fifth = tracker.pitchFor(5);
-
-        assertTrue(second > first, "pitch must rise with the streak");
-        assertTrue(fifth > second, "pitch must keep rising");
-        assertEquals(0.7f, first, 0.001f);
-        assertEquals(2.0f, tracker.pitchFor(100), 0.001f, "pitch is capped at max-pitch");
+    @DisplayName("default reward milestones are every three qualifying kills")
+    void rewardMilestonesUseDefaultInterval() {
+        assertEquals(3, plugin.getKillstreakRewardEvery());
+        assertEquals(2, plugin.getKillstreakRewardTokens());
+        assertFalse(plugin.shouldRewardKillstreak(1));
+        assertFalse(plugin.shouldRewardKillstreak(2));
+        assertTrue(plugin.shouldRewardKillstreak(3));
+        assertFalse(plugin.shouldRewardKillstreak(4));
+        assertTrue(plugin.shouldRewardKillstreak(6));
     }
 
     @Test
-    @DisplayName("pitch never drops below the playable minimum")
-    void pitchIsBoundedAtTheMinimum() {
-        plugin.getConfig().set("killstreak.base-pitch", 0.1);
-        plugin.applyConfig();
-
-        assertEquals(KillstreakTracker.MIN_PITCH,
-                plugin.getKillstreakTracker().pitchFor(1), 0.001f);
-    }
-
-    @Test
-    @DisplayName("disabled killstreaks still count kills but announce nothing")
-    void disabledKillstreakStillCounts() {
+    @DisplayName("disabled killstreaks still count kills but do not reward milestones")
+    void disabledKillstreakStillCountsWithoutRewards() {
         plugin.getConfig().set("killstreak.enabled", false);
+        plugin.applyConfig();
         final PlayerMock player = server.addPlayer();
 
         assertEquals(1, plugin.getKillstreakTracker().increment(player));
+        assertFalse(plugin.shouldRewardKillstreak(3));
     }
 }

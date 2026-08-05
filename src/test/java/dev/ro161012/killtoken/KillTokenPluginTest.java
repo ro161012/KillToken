@@ -70,6 +70,22 @@ final class KillTokenPluginTest {
     }
 
     @Test
+    @DisplayName("old killstreak settings migrate to chat announcements and rewards")
+    void legacyKillstreakSettingsAreMigrated() {
+        plugin.getConfig().set("killstreak.message", "&6Killstreak&8: &f%streak%");
+        plugin.getConfig().set("killstreak.reward-every", null);
+        plugin.getConfig().set("killstreak.reward-tokens", null);
+        plugin.getConfig().set("killstreak.reward-message", null);
+
+        plugin.applyConfig();
+
+        assertTrue(plugin.getKillstreakMessage().contains("is on a"));
+        assertEquals(3, plugin.getKillstreakRewardEvery());
+        assertEquals(2, plugin.getKillstreakRewardTokens());
+        assertNotNull(plugin.getConfig().getString("killstreak.reward-message"));
+    }
+
+    @Test
     @DisplayName("setCurrencyItem persists and normalises the new currency")
     void setCurrencyItemPersists() {
         plugin.setCurrencyItem(new ItemStack(Material.DIAMOND, 5));

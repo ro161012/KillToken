@@ -40,7 +40,7 @@
 
 | Player-kill drops | Anti-farming cooldown | Killstreaks |
 |---|---|---|
-| Tokens drop only when another player deals the killing damage — melee, arrows, tridents. Mobs, fall damage, lava, drowning, void and suicide never drop. | After A kills B, the A-B pair goes on cooldown (default 60s). While active, neither direction drops a token; kills against anyone else are unaffected. | Consecutive kills build a streak shown on the action bar, with a sound that rises in pitch. Streaks reset on death or disconnect. |
+| Tokens drop only when another player deals the killing damage — melee, arrows, tridents. Mobs, fall damage, lava, drowning, void and suicide never drop. | After A kills B, the A-B pair goes on cooldown (default 60s). While active, neither direction drops a token; kills against anyone else are unaffected. | Consecutive qualifying kills are announced in chat. Every 3 kills grants 2 bonus tokens; streaks reset on death or disconnect. |
 
 | Customizable currency | Compressed Kill Token Block | Give-to-inventory |
 |---|---|---|
@@ -98,11 +98,12 @@ cooldown-message: "&cNo Kill Token dropped - you and this player are on cooldown
 
 killstreak:
   enabled: true
-  message: "&6Killstreak&8: &f%streak%"   # %streak% = current streak length
-  sound: ENTITY_EXPERIENCE_ORB_PICKUP     # any org.bukkit.Sound name
-  base-pitch: 0.7                         # pitch at a streak of 1
-  pitch-per-kill: 0.15                    # rise per consecutive kill
-  max-pitch: 2.0                          # pitch cap
+  # %player% = killer name; %streak% = current streak length
+  message: "&c%player% &7is on a &6%streak% &7killstreak!"
+  sound: ENTITY_EXPERIENCE_ORB_PICKUP     # played only for the streak owner at pitch 1.0
+  reward-every: 3                         # qualifying kills between bonuses
+  reward-tokens: 2                        # bonus tokens sent directly to inventory
+  reward-message: "&6+%amount% Kill Tokens &7for your &c%streak% &7killstreak!"
 
 compressed-blocks:
   compressed-block-material: QUARTZ_BLOCK # material of the 64-token block

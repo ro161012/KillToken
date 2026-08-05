@@ -19,19 +19,21 @@ kill-message: "&6+1 Kill Token"
 # ------------------------------------------------------------
 #  Killstreaks
 # ------------------------------------------------------------
-# Consecutive PvP kills build a streak. Each kill shows a short counter on
-# the action bar (the text above the hotbar, between health and hunger) and
-# plays a sound whose pitch rises the higher the streak goes. Streaks reset
-# on death (any cause) and on disconnect.
+# Consecutive qualifying PvP kills build a streak. Each kill is announced to
+# the server chat, while the streak owner alone hears the sound at a fixed
+# normal pitch. Streaks reset on death (any cause) and on disconnect.
 killstreak:
   enabled: true
-  # %streak% is replaced with the current streak length.
-  message: "&6Killstreak&8: &f%streak%"
-  # Any org.bukkit.Sound name.
+  # %player% is the killer's name; %streak% is their current streak.
+  message: "&c%player% &7is on a &6%streak% &7killstreak!"
+  # Any org.bukkit.Sound name. It plays only for the streak owner at pitch 1.0.
   sound: ENTITY_EXPERIENCE_ORB_PICKUP
-  base-pitch: 0.7
-  pitch-per-kill: 0.15
-  max-pitch: 2.0
+  # Every third qualifying streak kill grants two bonus Kill Tokens directly
+  # to the streak owner's inventory. Overflow is dropped at their feet.
+  reward-every: 3
+  reward-tokens: 2
+  # %amount% is the bonus; %streak% is the milestone reached.
+  reward-message: "&6+%amount% Kill Tokens &7for your &c%streak% &7killstreak!"
 
 # ------------------------------------------------------------
 #  Currency item

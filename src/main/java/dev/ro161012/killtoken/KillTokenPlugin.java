@@ -2,12 +2,14 @@ package dev.ro161012.killtoken;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -32,6 +34,9 @@ public class KillTokenPlugin extends JavaPlugin {
     private static final String DEFAULT_TOKEN_NAME = "Kill Token";
     private static final String DEFAULT_TOKEN_LORE = "Awarded for killing another player.";
     private static final String LEGACY_DEFAULT_TOKEN_LORE = "Awarded for slaying another player.";
+    private static final String DEFAULT_KILLSTREAK_MESSAGE = "&c%player% &7is on a &6%streak% &7killstreak!";
+    private static final String LEGACY_KILLSTREAK_MESSAGE = "&6Killstreak&8: &f%streak%";
+    private static final int MAX_KILLSTREAK_REWARD_TOKENS = 2304;
 
     private PairCooldown pairCooldown;
     private KillstreakTracker killstreakTracker;
@@ -47,9 +52,9 @@ public class KillTokenPlugin extends JavaPlugin {
     private boolean killstreakEnabled;
     private String killstreakMessage;
     private Sound killstreakSound;
-    private float killstreakBasePitch;
-    private float killstreakPitchPerKill;
-    private float killstreakMaxPitch;
+    private int killstreakRewardEvery;
+    private int killstreakRewardTokens;
+    private String killstreakRewardMessage;
 
     @Override
     public void onEnable() {
@@ -133,6 +138,7 @@ public class KillTokenPlugin extends JavaPlugin {
      */
     private void refreshConfigCache() {
         final FileConfiguration config = getConfig();
+        migrateKillstreakConfig(config);
 
         this.tokensPerKill = Math.max(1, config.getInt("tokens-per-kill", 1));
         this.cooldownSeconds = config.getLong("cooldown-seconds", 60L);
@@ -142,8 +148,8 @@ public class KillTokenPlugin extends JavaPlugin {
         this.killMessage = color(config.getString("kill-message", "&6+1 Kill Token"));
 
         this.killstreakEnabled = config.getBoolean("killstreak.enabled", true);
-        this.killstreakMessage = config.getString(
-                "killstreak.message", "&6Killstreak&8: &f%streak%");
+        this.killstreakMessage = color(config.getString("killstreak.message",
+                DEFAULT_KILLSTREAK_MESSAGE));
         final String soundName = config.getString(
                 "killstreak.sound", "ENTITY_EXPERIENCE_ORB_PICKUP");
         try {
@@ -151,9 +157,42 @@ public class KillTokenPlugin extends JavaPlugin {
         } catch (IllegalArgumentException e) {
             this.killstreakSound = Sound.ENTITY_EXPERIENCE_ORB_PICKUP;
         }
-        this.killstreakBasePitch = (float) config.getDouble("killstreak.base-pitch", 0.7);
-        this.killstreakPitchPerKill = (float) config.getDouble("killstreak.pitch-per-kill", 0.15);
-        this.killstreakMaxPitch = (float) config.getDouble("killstreak.max-pitch", 2.0);
+        this.killstreakRewardEvery = Math.max(1, config.getInt("killstreak.reward-every", 3));
+        this.killstreakRewardTokens = Math.min(MAX_KILLSTREAK_REWARD_TOKENS,
+                Math.max(1, config.getInt("killstreak.reward-tokens", 2)));
+        this.killstreakRewardMessage = color(config.getString("killstreak.reward-message",
+                "&6+%amount% Kill Tokens &7for your &c%streak% &7killstreak!"));
+    }
+
+    /**
+     * Updates the old stock action-bar template and adds new reward settings
+     * to existing server configurations. Administrator-customized messages
+     * are preserved.
+     *
+     * @param config current plugin configuration
+     */
+    private void migrateKillstreakConfig(final FileConfiguration config) {
+        boolean changed = false;
+        if (LEGACY_KILLSTREAK_MESSAGE.equals(config.getString("killstreak.message"))) {
+            config.set("killstreak.message", DEFAULT_KILLSTREAK_MESSAGE);
+            changed = true;
+        }
+        if (!config.contains("killstreak.reward-every")) {
+            config.set("killstreak.reward-every", 3);
+            changed = true;
+        }
+        if (!config.contains("killstreak.reward-tokens")) {
+            config.set("killstreak.reward-tokens", 2);
+            changed = true;
+        }
+        if (!config.contains("killstreak.reward-message")) {
+            config.set("killstreak.reward-message",
+                    "&6+%amount% Kill Tokens &7for your &c%streak% &7killstreak!");
+            changed = true;
+        }
+        if (changed) {
+            saveConfig();
+        }
     }
 
     /**
@@ -269,7 +308,8 @@ public class KillTokenPlugin extends JavaPlugin {
     }
 
     /**
-     * Whether killstreak announcements (action bar + sound) are enabled.
+     * Whether killstreak chat announcements, personal sounds, and milestone
+     * rewards are enabled.
      *
      * @return true if enabled
      */
@@ -278,8 +318,8 @@ public class KillTokenPlugin extends JavaPlugin {
     }
 
     /**
-     * Returns the raw killstreak action-bar message with the
-     * {@code %streak%} placeholder.
+     * Returns the colourised killstreak chat message with the {@code %player%}
+     * and {@code %streak%} placeholders.
      *
      * @return message template
      */
@@ -289,6 +329,7 @@ public class KillTokenPlugin extends JavaPlugin {
 
     /**
      * Returns the configured killstreak sound, resolved once at config load.
+     * The sound is always played at Minecraft's normal pitch of 1.0.
      *
      * @return the sound to play
      */
@@ -297,30 +338,52 @@ public class KillTokenPlugin extends JavaPlugin {
     }
 
     /**
-     * Returns the pitch of the killstreak sound at a streak of one.
+     * Returns whether the supplied streak has earned a reward milestone.
      *
-     * @return base pitch
+     * @param streak current streak length
+     * @return true when rewards are enabled and the streak is a milestone
      */
-    public float getKillstreakBasePitch() {
-        return killstreakBasePitch;
+    public boolean shouldRewardKillstreak(final int streak) {
+        return killstreakEnabled && streak > 0 && streak % killstreakRewardEvery == 0;
     }
 
     /**
-     * Returns how much the pitch rises per consecutive kill.
+     * Gives the configured streak reward directly to the player's inventory.
+     * Any amount that does not fit is dropped at the player's feet.
      *
-     * @return pitch step per kill
+     * @param player player receiving the reward
+     * @param streak streak length that earned the reward
      */
-    public float getKillstreakPitchPerKill() {
-        return killstreakPitchPerKill;
+    public void rewardKillstreak(final Player player, final int streak) {
+        final Map<Integer, ItemStack> leftover = player.getInventory().addItem(
+                createToken(killstreakRewardTokens));
+        for (final ItemStack drop : leftover.values()) {
+            player.getWorld().dropItemNaturally(player.getLocation(), drop);
+        }
+
+        if (!killstreakRewardMessage.isEmpty()) {
+            player.sendMessage(killstreakRewardMessage
+                    .replace("%amount%", String.valueOf(killstreakRewardTokens))
+                    .replace("%streak%", String.valueOf(streak)));
+        }
     }
 
     /**
-     * Returns the maximum pitch the killstreak sound can reach.
+     * Returns the number of qualifying kills between rewards.
      *
-     * @return pitch cap
+     * @return reward interval, always at least one
      */
-    public float getKillstreakMaxPitch() {
-        return killstreakMaxPitch;
+    public int getKillstreakRewardEvery() {
+        return killstreakRewardEvery;
+    }
+
+    /**
+     * Returns the number of Kill Tokens given at a reward milestone.
+     *
+     * @return reward amount, between one and the configured safety cap
+     */
+    public int getKillstreakRewardTokens() {
+        return killstreakRewardTokens;
     }
 
     /**

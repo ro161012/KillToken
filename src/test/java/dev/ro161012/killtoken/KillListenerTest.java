@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.bukkit.Material;
 import org.bukkit.damage.DamageSource;
@@ -43,6 +44,13 @@ final class KillListenerTest {
         return server.getWorlds().get(0).getEntities().stream()
                 .filter(entity -> entity.getType() == EntityType.ITEM)
                 .count();
+    }
+
+    private int inventoryTokenCount(final PlayerMock player) {
+        return Arrays.stream(player.getInventory().getContents())
+                .filter(item -> item != null && item.getType() == Material.NETHER_STAR)
+                .mapToInt(item -> item.getAmount())
+                .sum();
     }
 
     private void firePlayerKill(final PlayerMock victim, final PlayerMock killer) {
@@ -129,6 +137,21 @@ final class KillListenerTest {
 
         firePlayerKill(server.addPlayer(), killer);
         assertEquals(2, plugin.getKillstreakTracker().get(killer.getUniqueId()));
+    }
+
+    @Test
+    @DisplayName("every third qualifying streak kill gives two bonus tokens")
+    void thirdKillstreakKillGivesInventoryReward() {
+        final PlayerMock killer = server.addPlayer();
+
+        firePlayerKill(server.addPlayer(), killer);
+        firePlayerKill(server.addPlayer(), killer);
+        assertEquals(0, inventoryTokenCount(killer));
+
+        firePlayerKill(server.addPlayer(), killer);
+
+        assertEquals(3, plugin.getKillstreakTracker().get(killer.getUniqueId()));
+        assertEquals(2, inventoryTokenCount(killer));
     }
 
     @Test

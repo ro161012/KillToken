@@ -4,25 +4,20 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.entity.Player;
 
 /**
- * Tracks consecutive PvP kills per player and presents them to the killer:
- * a short action-bar counter (the text above the hotbar, between the health
- * and hunger indicators) and a sound whose pitch rises with each consecutive
- * kill.
+ * Tracks consecutive PvP kills per player. Each qualifying kill broadcasts
+ * the player's current streak in chat and plays a fixed-pitch sound only for
+ * that player.
  *
  * <p>A streak ends when its owner dies - from any cause - or leaves the
  * server. Streaks are intentionally kept in memory only.
  */
 public final class KillstreakTracker {
 
-    /** Lowest pitch Minecraft plays back sensibly. */
-    static final float MIN_PITCH = 0.5f;
-
     private static final float VOLUME = 1.0f;
+    private static final float SOUND_PITCH = 1.0f;
 
     private final KillTokenPlugin plugin;
     private final Map<UUID, Integer> streaks = new ConcurrentHashMap<>();
@@ -37,8 +32,8 @@ public final class KillstreakTracker {
     }
 
     /**
-     * Increments the killer's streak, announces it, and returns the new
-     * streak length.
+     * Increments the killer's streak, announces it in chat, and returns the
+     * new streak length.
      *
      * @param killer the player who scored the kill
      * @return the new streak length
@@ -70,31 +65,21 @@ public final class KillstreakTracker {
     }
 
     /**
-     * Computes the sound pitch for the given streak: the configured base
-     * pitch plus one step per kill, clamped to
-     * [{@value #MIN_PITCH}, max-pitch].
+     * Broadcasts the configured streak message and plays the configured sound
+     * for the streak owner alone. The pitch stays at Minecraft's normal 1.0.
      *
-     * @param streak current streak length (at least 1)
-     * @return pitch to play the killstreak sound at
-     */
-    public float pitchFor(final int streak) {
-        final float raw = plugin.getKillstreakBasePitch()
-                + (streak - 1) * plugin.getKillstreakPitchPerKill();
-        return Math.min(plugin.getKillstreakMaxPitch(), Math.max(MIN_PITCH, raw));
-    }
-
-    /**
-     * Shows the action-bar message and plays the streak sound. The action
-     * bar fades on its own after roughly a second of display time.
+     * @param killer player whose streak increased
+     * @param streak current streak length
      */
     private void announce(final Player killer, final int streak) {
         if (!plugin.killstreakEnabled()) {
             return;
         }
-        final String message = KillTokenPlugin.color(
-                plugin.getKillstreakMessage().replace("%streak%", String.valueOf(streak)));
-        final Component actionBar = LegacyComponentSerializer.legacySection().deserialize(message);
-        killer.sendActionBar(actionBar);
-        killer.playSound(killer.getLocation(), plugin.getKillstreakSound(), VOLUME, pitchFor(streak));
+
+        final String message = plugin.getKillstreakMessage()
+                .replace("%player%", killer.getName())
+                .replace("%streak%", String.valueOf(streak));
+        plugin.getServer().broadcastMessage(message);
+        killer.playSound(killer.getLocation(), plugin.getKillstreakSound(), VOLUME, SOUND_PITCH);
     }
 }

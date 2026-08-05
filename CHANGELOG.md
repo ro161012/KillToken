@@ -5,6 +5,23 @@ All notable changes to KillToken are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.4] - 2026-08-04
+
+### Changed
+
+- Killstreak updates now broadcast in chat as "<player> is on a <streak>
+  killstreak!" in a red and gold colour scheme. They no longer use the
+  action bar.
+- The configured killstreak sound is played only for the streak owner at a
+  fixed normal pitch of 1.0.
+
+### Added
+
+- Every 3 qualifying consecutive kills now gives the streak owner 2 bonus
+  Kill Tokens directly to their inventory. Overflow is dropped at their feet.
+  The milestone interval, amount, messages, and sound remain configurable.
+  Existing stock killstreak configurations are migrated automatically.
+
 ## [1.2.3] - 2026-08-04
 
 ### Changed
