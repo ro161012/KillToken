@@ -58,7 +58,16 @@
 
 A default `plugins/KillToken/config.yml` is created on first run.
 
-**Requirements:** Paper (or a Paper fork) 1.21+ and Java 21+.
+**Compatibility:**
+
+| Server version | Required Java | KillToken jar |
+|---|---:|---|
+| Paper 1.21.x | 21+ | Same jar |
+| Paper 26.x.x | 25+ | Same jar |
+
+KillToken is built against the Paper 1.21 API baseline and uses only stable
+Bukkit/Paper APIs. The CI pipeline also compiles it against Paper 26.x with
+Java 25 to catch cross-version API breaks.
 
 ## Commands
 

@@ -5,6 +5,16 @@ All notable changes to KillToken are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.9] - 2026-08-04
+
+### Changed
+
+- Added verified compatibility targets for Paper 1.21.x and Paper 26.x.x.
+  The same Java 21 plugin jar runs on both; Paper 26.x.x servers require
+  Java 25 as required by Paper itself.
+- CI now compiles the plugin against the Paper 1.21 baseline and Paper 26.x
+  to detect cross-version API incompatibilities.
+
 ## [1.2.8] - 2026-08-04
 
 ### Changed

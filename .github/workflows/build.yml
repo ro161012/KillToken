@@ -31,9 +31,26 @@ jobs:
           path: target/KillToken-*.jar
           if-no-files-found: error
 
+  paper-26-compatibility:
+    name: Check Paper 26 compatibility
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the project files
+        uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Compile against Paper 26
+        run: ./mvnw -B -ntp -Ppaper-26 -Dmaven.test.skip=true verify
+
   release:
     name: Publish release files
-    needs: build
+    needs: [build, paper-26-compatibility]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
