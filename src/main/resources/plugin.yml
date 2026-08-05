@@ -10,7 +10,7 @@ website: https://github.com/ro161012/KillToken
 commands:
   killtoken:
     description: Manage the Kill Token currency.
-    usage: /killtoken <set|give|giveblock|reload>
+    usage: /killtoken <set|give|giveblock|reload|test>
     permission: killtoken.admin
 
 permissions:
@@ -21,6 +21,7 @@ permissions:
       killtoken.set: true
       killtoken.give: true
       killtoken.reload: true
+      killtoken.test: true
   killtoken.set:
     description: Allows changing the Kill Token currency item.
     default: op
@@ -29,4 +30,7 @@ permissions:
     default: op
   killtoken.reload:
     description: Allows reloading the KillToken configuration.
+    default: op
+  killtoken.test:
+    description: Allows previewing the configured killstreak milestone.
     default: op

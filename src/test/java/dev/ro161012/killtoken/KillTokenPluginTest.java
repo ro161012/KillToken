@@ -16,6 +16,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockbukkit.mockbukkit.MockBukkit;
 import org.mockbukkit.mockbukkit.ServerMock;
+import org.mockbukkit.mockbukkit.entity.PlayerMock;
 
 /**
  * Integration tests for the plugin lifecycle and currency item handling.
@@ -83,6 +84,18 @@ final class KillTokenPluginTest {
         assertEquals(3, plugin.getKillstreakRewardEvery());
         assertEquals(2, plugin.getKillstreakRewardTokens());
         assertNotNull(plugin.getConfig().getString("killstreak.reward-message"));
+    }
+
+    @Test
+    @DisplayName("killstreak test previews the milestone without changing a real streak")
+    void killstreakTestPreviewsRewardWithoutChangingStreak() {
+        final PlayerMock player = server.addPlayer();
+
+        assertTrue(plugin.runKillstreakTest(player));
+        assertEquals(0, plugin.getKillstreakTracker().get(player.getUniqueId()));
+        assertEquals(2, player.getInventory().all(Material.NETHER_STAR).values().stream()
+                .mapToInt(ItemStack::getAmount)
+                .sum());
     }
 
     @Test

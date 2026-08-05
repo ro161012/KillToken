@@ -45,6 +45,17 @@ public final class KillstreakTracker {
     }
 
     /**
+     * Shows a configured streak announcement without changing the player's
+     * real streak. Used by the administrator test command.
+     *
+     * @param player player used in the preview
+     * @param streak streak length to preview
+     */
+    public void preview(final Player player, final int streak) {
+        announce(player, Math.max(1, streak));
+    }
+
+    /**
      * Clears a player's streak. Called whenever the player dies (from any
      * cause) or disconnects.
      *

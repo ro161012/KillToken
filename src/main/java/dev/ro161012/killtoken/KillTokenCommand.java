@@ -23,15 +23,17 @@ import org.bukkit.inventory.ItemStack;
  *   <li>{@code /killtoken giveblock [player] [amount]} &mdash; grants
  *       compressed Kill Token blocks (each worth 64 tokens).</li>
  *   <li>{@code /killtoken reload} &mdash; reloads {@code config.yml}.</li>
+ *   <li>{@code /killtoken test} &mdash; previews the configured killstreak
+ *       announcement, sound, and reward milestone.</li>
  * </ul>
  *
  * <p>Subcommands are guarded by the fine-grained permissions
- * {@code killtoken.set}, {@code killtoken.give} and {@code killtoken.reload},
- * all children of {@code killtoken.admin}.
+ * {@code killtoken.set}, {@code killtoken.give}, {@code killtoken.reload}, and
+ * {@code killtoken.test}, all children of {@code killtoken.admin}.
  */
 public final class KillTokenCommand implements TabExecutor {
 
-    private static final List<String> SUBCOMMANDS = List.of("set", "give", "giveblock", "reload");
+    private static final List<String> SUBCOMMANDS = List.of("set", "give", "giveblock", "reload", "test");
     private static final List<String> AMOUNT_SUGGESTIONS = List.of("1", "16", "64");
 
     /** Hard cap for a single {@code /killtoken give} payout (36 stacks). */
@@ -64,6 +66,7 @@ public final class KillTokenCommand implements TabExecutor {
             case "give" -> handleGive(sender, args);
             case "giveblock" -> handleGiveBlock(sender, args);
             case "reload" -> handleReload(sender);
+            case "test" -> handleTest(sender);
             default -> sendUsage(sender, label);
         }
         return true;
@@ -77,6 +80,8 @@ public final class KillTokenCommand implements TabExecutor {
         sender.sendMessage(KillTokenPlugin.color(
                 "&f/" + label + " giveblock [player] [amount] &8- &7hand out compressed blocks"));
         sender.sendMessage(KillTokenPlugin.color("&f/" + label + " reload &8- &7reload the configuration"));
+        sender.sendMessage(KillTokenPlugin.color(
+                "&f/" + label + " test &8- &7preview the killstreak reward milestone"));
     }
 
     private void handleSet(final CommandSender sender) {
@@ -213,6 +218,30 @@ public final class KillTokenCommand implements TabExecutor {
         }
         plugin.reload();
         sender.sendMessage(KillTokenPlugin.color("&aKillToken configuration reloaded."));
+    }
+
+    /**
+     * Runs a safe killstreak milestone preview for an administrator.
+     *
+     * @param sender command sender
+     */
+    private void handleTest(final CommandSender sender) {
+        if (!sender.hasPermission("killtoken.test")) {
+            sender.sendMessage(KillTokenPlugin.color("&cYou do not have permission to do that."));
+            return;
+        }
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(KillTokenPlugin.color("&cOnly players can run a killstreak test."));
+            return;
+        }
+        if (!plugin.runKillstreakTest(player)) {
+            sender.sendMessage(KillTokenPlugin.color("&cKillstreaks are disabled in the configuration."));
+            return;
+        }
+
+        sender.sendMessage(KillTokenPlugin.color("&6KillToken &8| &7Tested the &6"
+                + plugin.getKillstreakRewardEvery() + "&7-kill milestone. No normal kill drop, cooldown, or"
+                + " real streak was changed."));
     }
 
     private static String prettyName(final Material material) {

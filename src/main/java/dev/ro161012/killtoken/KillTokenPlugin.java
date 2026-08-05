@@ -369,6 +369,25 @@ public class KillTokenPlugin extends JavaPlugin {
     }
 
     /**
+     * Runs a safe preview of the configured reward milestone for an
+     * administrator. It broadcasts the chat announcement, plays the personal
+     * sound, and gives the configured bonus without changing a real streak,
+     * pair cooldown, or normal kill-token drop.
+     *
+     * @param player administrator running the preview
+     * @return false when killstreaks are disabled
+     */
+    public boolean runKillstreakTest(final Player player) {
+        if (!killstreakEnabled) {
+            return false;
+        }
+
+        killstreakTracker.preview(player, killstreakRewardEvery);
+        rewardKillstreak(player, killstreakRewardEvery);
+        return true;
+    }
+
+    /**
      * Returns the number of qualifying kills between rewards.
      *
      * @return reward interval, always at least one

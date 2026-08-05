@@ -5,6 +5,15 @@ All notable changes to KillToken are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.5] - 2026-08-04
+
+### Added
+
+- `/killtoken test` for administrators to preview the configured killstreak
+  reward milestone. It broadcasts the configured chat announcement, plays the
+  streak owner's personal sound, and grants the configured bonus without
+  changing a real streak, pair cooldown, or normal kill-token drop.
+
 ## [1.2.4] - 2026-08-04
 
 ### Changed

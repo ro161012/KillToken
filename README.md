@@ -68,6 +68,7 @@ A default `plugins/KillToken/config.yml` is created on first run.
 | `/killtoken give [player] [amount]` | Give Kill Tokens (defaults to you, 1 token). | `killtoken.give` |
 | `/killtoken giveblock [player] [amount]` | Give compressed blocks, each worth 64 tokens. | `killtoken.give` |
 | `/killtoken reload` | Reload `config.yml`. | `killtoken.reload` |
+| `/killtoken test` | Preview the configured killstreak chat message, personal sound, and reward milestone without changing a real streak or cooldown. It grants the configured test reward. | `killtoken.test` |
 
 All commands are tab-completed, including player names and amounts.
 
@@ -79,6 +80,7 @@ All commands are tab-completed, including player names and amounts.
 | `killtoken.set` | Change the Kill Token currency item. | `op` |
 | `killtoken.give` | Hand out Kill Tokens and compressed blocks. | `op` |
 | `killtoken.reload` | Reload the configuration. | `op` |
+| `killtoken.test` | Preview the configured killstreak milestone. | `op` |
 
 ## Configuration
 

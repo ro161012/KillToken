@@ -184,7 +184,7 @@ final class KillTokenCommandTest {
 
         final List<String> subs = plugin.getCommand("killtoken")
                 .tabComplete(player, "killtoken", new String[]{""});
-        assertTrue(subs.containsAll(List.of("set", "give", "giveblock", "reload")));
+        assertTrue(subs.containsAll(List.of("set", "give", "giveblock", "reload", "test")));
 
         final List<String> giveTargets = plugin.getCommand("killtoken")
                 .tabComplete(player, "killtoken", new String[]{"give", ""});
@@ -197,6 +197,19 @@ final class KillTokenCommandTest {
                 .map(Item.class::cast)
                 .map(Item::getItemStack)
                 .toList();
+    }
+
+    @Test
+    @DisplayName("/killtoken test previews the reward milestone without changing a real streak")
+    void testPreviewsKillstreakMilestone() {
+        final PlayerMock player = server.addPlayer();
+        player.setOp(true);
+
+        player.performCommand("killtoken test");
+
+        assertEquals(2, tokensInInventory(player));
+        assertEquals(0, plugin.getKillstreakTracker().get(player.getUniqueId()));
+        assertEquals(0, tokensOnFloor());
     }
 
     @Test
