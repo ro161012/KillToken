@@ -58,15 +58,13 @@ public final class KillListener implements Listener {
 
         cooldown.apply(killer.getUniqueId(), victim.getUniqueId());
 
-        // Consecutive PvP kills build the killer's killstreak. Every configured
-        // milestone grants a small direct-to-inventory bonus.
+        // Consecutive PvP kills build the killer's killstreak. Starting at the
+        // configured streak, the normal floor drop receives a token multiplier.
         final int streak = plugin.getKillstreakTracker().increment(killer);
-        if (plugin.shouldRewardKillstreak(streak)) {
-            plugin.rewardKillstreak(killer, streak);
-        }
 
         final Location deathLocation = victim.getLocation();
-        victim.getWorld().dropItemNaturally(deathLocation, plugin.createToken());
+        victim.getWorld().dropItemNaturally(deathLocation, plugin.createToken(
+                plugin.getKillstreakTokenAmount(streak)));
 
         final String killMessage = plugin.getKillMessage();
         if (!killMessage.isEmpty()) {

@@ -40,7 +40,7 @@
 
 | Player-kill drops | Anti-farming cooldown | Killstreaks |
 |---|---|---|
-| Tokens drop only when another player deals the killing damage — melee, arrows, tridents. Mobs, fall damage, lava, drowning, void and suicide never drop. | After A kills B, the A-B pair goes on cooldown (default 60s). While active, neither direction drops a token; kills against anyone else are unaffected. | Consecutive qualifying kills are announced in chat. Every 3 kills grants 2 bonus tokens; streaks reset on death or disconnect. |
+| Tokens drop only when another player deals the killing damage — melee, arrows, tridents. Mobs, fall damage, lava, drowning, void and suicide never drop. | After A kills B, the A-B pair goes on cooldown (default 60s). While active, neither direction drops a token; kills against anyone else are unaffected. | Streaks announce each qualifying kill from 2 onward. Token drops become 2x at 3 kills, rise every 3 kills, and cap at 5x. |
 
 | Customizable currency | Compressed Kill Token Block | Give-to-inventory |
 |---|---|---|
@@ -68,7 +68,7 @@ A default `plugins/KillToken/config.yml` is created on first run.
 | `/killtoken give [player] [amount]` | Give Kill Tokens (defaults to you, 1 token). | `killtoken.give` |
 | `/killtoken giveblock [player] [amount]` | Give compressed blocks, each worth 64 tokens. | `killtoken.give` |
 | `/killtoken reload` | Reload `config.yml`. | `killtoken.reload` |
-| `/killtoken test` | Preview the configured killstreak chat message, personal sound, and reward milestone without changing a real streak or cooldown. It grants the configured test reward. | `killtoken.test` |
+| `/killtoken test` | Preview the chat announcements and multiplier token drop without changing a real streak or cooldown. | `killtoken.test` |
 
 All commands are tab-completed, including player names and amounts.
 
@@ -80,7 +80,7 @@ All commands are tab-completed, including player names and amounts.
 | `killtoken.set` | Change the Kill Token currency item. | `op` |
 | `killtoken.give` | Hand out Kill Tokens and compressed blocks. | `op` |
 | `killtoken.reload` | Reload the configuration. | `op` |
-| `killtoken.test` | Preview the configured killstreak milestone. | `op` |
+| `killtoken.test` | Preview the configured killstreak chat and token multiplier. | `op` |
 
 ## Configuration
 
@@ -103,9 +103,10 @@ killstreak:
   # %player% = killer name; %streak% = current streak length
   message: "&c%player% &7is on a &6%streak% &7killstreak!"
   sound: ENTITY_EXPERIENCE_ORB_PICKUP     # played only for the streak owner at pitch 1.0
-  reward-every: 3                         # qualifying kills between bonuses
-  reward-tokens: 2                        # bonus tokens sent directly to inventory
-  reward-message: "&6+%amount% Kill Tokens &7for your &c%streak% &7killstreak!"
+  announcement-minimum: 2                 # no streak chat or sound at 1
+  reward-start: 3                         # normal token drops become 2x here
+  reward-step: 3                          # add another x every 3 kills
+  max-token-multiplier: 5                 # cap the multiplier at 5x
 
 compressed-blocks:
   compressed-block-material: QUARTZ_BLOCK # material of the 64-token block

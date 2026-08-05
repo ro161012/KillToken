@@ -5,6 +5,17 @@ All notable changes to KillToken are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.6] - 2026-08-04
+
+### Changed
+
+- Killstreak chat announcements and the personal sound now begin at streak 2
+  and continue on every qualifying kill after that. Streak 1 stays silent.
+- Token drops now multiply with a streak instead of giving a separate
+  inventory bonus: 2x at streak 3, 3x at streak 6, 4x at streak 9, and 5x at
+  streak 12 and above. The multiplier applies to the normal floor drop.
+- `/killtoken test` now previews the chat threshold and multiplier token drop.
+
 ## [1.2.5] - 2026-08-04
 
 ### Added

@@ -8,6 +8,8 @@ import java.util.List;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Item;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.junit.jupiter.api.AfterEach;
@@ -71,30 +73,34 @@ final class KillTokenPluginTest {
     }
 
     @Test
-    @DisplayName("old killstreak settings migrate to chat announcements and rewards")
+    @DisplayName("old killstreak settings migrate to chat announcements and multipliers")
     void legacyKillstreakSettingsAreMigrated() {
         plugin.getConfig().set("killstreak.message", "&6Killstreak&8: &f%streak%");
-        plugin.getConfig().set("killstreak.reward-every", null);
-        plugin.getConfig().set("killstreak.reward-tokens", null);
-        plugin.getConfig().set("killstreak.reward-message", null);
+        plugin.getConfig().set("killstreak.announcement-minimum", null);
+        plugin.getConfig().set("killstreak.reward-start", null);
+        plugin.getConfig().set("killstreak.reward-step", null);
+        plugin.getConfig().set("killstreak.max-token-multiplier", null);
 
         plugin.applyConfig();
 
         assertTrue(plugin.getKillstreakMessage().contains("is on a"));
-        assertEquals(3, plugin.getKillstreakRewardEvery());
-        assertEquals(2, plugin.getKillstreakRewardTokens());
-        assertNotNull(plugin.getConfig().getString("killstreak.reward-message"));
+        assertEquals(2, plugin.getKillstreakAnnouncementMinimum());
+        assertEquals(3, plugin.getKillstreakRewardStart());
+        assertEquals(2, plugin.getKillstreakTokenMultiplier(3));
+        assertNotNull(plugin.getConfig().get("killstreak.max-token-multiplier"));
     }
 
     @Test
-    @DisplayName("killstreak test previews the milestone without changing a real streak")
-    void killstreakTestPreviewsRewardWithoutChangingStreak() {
+    @DisplayName("killstreak test previews the multiplier drop without changing a real streak")
+    void killstreakTestPreviewsMultiplierWithoutChangingStreak() {
         final PlayerMock player = server.addPlayer();
 
         assertTrue(plugin.runKillstreakTest(player));
         assertEquals(0, plugin.getKillstreakTracker().get(player.getUniqueId()));
-        assertEquals(2, player.getInventory().all(Material.NETHER_STAR).values().stream()
-                .mapToInt(ItemStack::getAmount)
+        assertEquals(2, server.getWorlds().get(0).getEntities().stream()
+                .filter(entity -> entity.getType() == EntityType.ITEM)
+                .map(Item.class::cast)
+                .mapToInt(item -> item.getItemStack().getAmount())
                 .sum());
     }
 

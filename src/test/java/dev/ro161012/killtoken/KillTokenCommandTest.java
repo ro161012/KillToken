@@ -200,16 +200,16 @@ final class KillTokenCommandTest {
     }
 
     @Test
-    @DisplayName("/killtoken test previews the reward milestone without changing a real streak")
-    void testPreviewsKillstreakMilestone() {
+    @DisplayName("/killtoken test previews the multiplier drop without changing a real streak")
+    void testPreviewsKillstreakMultiplier() {
         final PlayerMock player = server.addPlayer();
         player.setOp(true);
 
         player.performCommand("killtoken test");
 
-        assertEquals(2, tokensInInventory(player));
+        assertEquals(0, tokensInInventory(player));
         assertEquals(0, plugin.getKillstreakTracker().get(player.getUniqueId()));
-        assertEquals(0, tokensOnFloor());
+        assertEquals(2, tokensOnFloor());
     }
 
     @Test

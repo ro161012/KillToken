@@ -5,13 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import org.bukkit.Material;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Item;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,10 +46,12 @@ final class KillListenerTest {
                 .count();
     }
 
-    private int inventoryTokenCount(final PlayerMock player) {
-        return Arrays.stream(player.getInventory().getContents())
-                .filter(item -> item != null && item.getType() == Material.NETHER_STAR)
-                .mapToInt(item -> item.getAmount())
+    private int droppedTokenAmount() {
+        return server.getWorlds().get(0).getEntities().stream()
+                .filter(entity -> entity.getType() == EntityType.ITEM)
+                .map(Item.class::cast)
+                .filter(item -> item.getItemStack().getType() == Material.NETHER_STAR)
+                .mapToInt(item -> item.getItemStack().getAmount())
                 .sum();
     }
 
@@ -140,18 +142,18 @@ final class KillListenerTest {
     }
 
     @Test
-    @DisplayName("every third qualifying streak kill gives two bonus tokens")
-    void thirdKillstreakKillGivesInventoryReward() {
+    @DisplayName("third qualifying streak kill doubles the normal floor token drop")
+    void thirdKillstreakKillDoublesFloorTokenDrop() {
         final PlayerMock killer = server.addPlayer();
 
         firePlayerKill(server.addPlayer(), killer);
         firePlayerKill(server.addPlayer(), killer);
-        assertEquals(0, inventoryTokenCount(killer));
+        assertEquals(2, droppedTokenAmount());
 
         firePlayerKill(server.addPlayer(), killer);
 
         assertEquals(3, plugin.getKillstreakTracker().get(killer.getUniqueId()));
-        assertEquals(2, inventoryTokenCount(killer));
+        assertEquals(4, droppedTokenAmount());
     }
 
     @Test

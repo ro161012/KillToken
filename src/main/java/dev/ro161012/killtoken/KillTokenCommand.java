@@ -24,7 +24,7 @@ import org.bukkit.inventory.ItemStack;
  *       compressed Kill Token blocks (each worth 64 tokens).</li>
  *   <li>{@code /killtoken reload} &mdash; reloads {@code config.yml}.</li>
  *   <li>{@code /killtoken test} &mdash; previews the configured killstreak
- *       announcement, sound, and reward milestone.</li>
+ *       announcements, sound, and multiplier token drop.</li>
  * </ul>
  *
  * <p>Subcommands are guarded by the fine-grained permissions
@@ -81,7 +81,7 @@ public final class KillTokenCommand implements TabExecutor {
                 "&f/" + label + " giveblock [player] [amount] &8- &7hand out compressed blocks"));
         sender.sendMessage(KillTokenPlugin.color("&f/" + label + " reload &8- &7reload the configuration"));
         sender.sendMessage(KillTokenPlugin.color(
-                "&f/" + label + " test &8- &7preview the killstreak reward milestone"));
+                "&f/" + label + " test &8- &7preview killstreak chat and token multiplier"));
     }
 
     private void handleSet(final CommandSender sender) {
@@ -221,7 +221,7 @@ public final class KillTokenCommand implements TabExecutor {
     }
 
     /**
-     * Runs a safe killstreak milestone preview for an administrator.
+     * Runs a safe killstreak multiplier preview for an administrator.
      *
      * @param sender command sender
      */
@@ -239,9 +239,11 @@ public final class KillTokenCommand implements TabExecutor {
             return;
         }
 
-        sender.sendMessage(KillTokenPlugin.color("&6KillToken &8| &7Tested the &6"
-                + plugin.getKillstreakRewardEvery() + "&7-kill milestone. No normal kill drop, cooldown, or"
-                + " real streak was changed."));
+        final int rewardStreak = plugin.getKillstreakRewardStart();
+        sender.sendMessage(KillTokenPlugin.color("&6KillToken &8| &7Tested chat at &6"
+                + plugin.getKillstreakAnnouncementMinimum() + "&7 kills and the &6" + rewardStreak
+                + "&7-kill &6" + plugin.getKillstreakTokenMultiplier(rewardStreak)
+                + "x &7token drop. No real streak or cooldown was changed."));
     }
 
     private static String prettyName(final Material material) {

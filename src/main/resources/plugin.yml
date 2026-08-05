@@ -32,5 +32,5 @@ permissions:
     description: Allows reloading the KillToken configuration.
     default: op
   killtoken.test:
-    description: Allows previewing the configured killstreak milestone.
+    description: Allows previewing the configured killstreak chat and token multiplier.
     default: op

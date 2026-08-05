@@ -83,7 +83,7 @@ public final class KillstreakTracker {
      * @param streak current streak length
      */
     private void announce(final Player killer, final int streak) {
-        if (!plugin.killstreakEnabled()) {
+        if (!plugin.shouldAnnounceKillstreak(streak)) {
             return;
         }
 

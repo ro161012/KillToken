@@ -13,7 +13,7 @@ import org.mockbukkit.mockbukkit.ServerMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
 
 /**
- * Tests for the killstreak counter and reward milestones.
+ * Tests for the killstreak counter, announcements, and token multipliers.
  */
 final class KillstreakTrackerTest {
 
@@ -72,25 +72,32 @@ final class KillstreakTrackerTest {
     }
 
     @Test
-    @DisplayName("default reward milestones are every three qualifying kills")
-    void rewardMilestonesUseDefaultInterval() {
-        assertEquals(3, plugin.getKillstreakRewardEvery());
-        assertEquals(2, plugin.getKillstreakRewardTokens());
-        assertFalse(plugin.shouldRewardKillstreak(1));
-        assertFalse(plugin.shouldRewardKillstreak(2));
-        assertTrue(plugin.shouldRewardKillstreak(3));
-        assertFalse(plugin.shouldRewardKillstreak(4));
-        assertTrue(plugin.shouldRewardKillstreak(6));
+    @DisplayName("announcements start at two and token multipliers start at three")
+    void announcementsAndMultipliersUseDefaultThresholds() {
+        assertEquals(2, plugin.getKillstreakAnnouncementMinimum());
+        assertEquals(3, plugin.getKillstreakRewardStart());
+        assertFalse(plugin.shouldAnnounceKillstreak(1));
+        assertTrue(plugin.shouldAnnounceKillstreak(2));
+
+        assertEquals(1, plugin.getKillstreakTokenMultiplier(1));
+        assertEquals(1, plugin.getKillstreakTokenMultiplier(2));
+        assertEquals(2, plugin.getKillstreakTokenMultiplier(3));
+        assertEquals(2, plugin.getKillstreakTokenMultiplier(5));
+        assertEquals(3, plugin.getKillstreakTokenMultiplier(6));
+        assertEquals(4, plugin.getKillstreakTokenMultiplier(9));
+        assertEquals(5, plugin.getKillstreakTokenMultiplier(12));
+        assertEquals(5, plugin.getKillstreakTokenMultiplier(100));
     }
 
     @Test
-    @DisplayName("disabled killstreaks still count kills but do not reward milestones")
-    void disabledKillstreakStillCountsWithoutRewards() {
+    @DisplayName("disabled killstreaks still count kills without announcements or multipliers")
+    void disabledKillstreakStillCountsWithoutAnnouncementsOrMultipliers() {
         plugin.getConfig().set("killstreak.enabled", false);
         plugin.applyConfig();
         final PlayerMock player = server.addPlayer();
 
         assertEquals(1, plugin.getKillstreakTracker().increment(player));
-        assertFalse(plugin.shouldRewardKillstreak(3));
+        assertFalse(plugin.shouldAnnounceKillstreak(2));
+        assertEquals(1, plugin.getKillstreakTokenMultiplier(12));
     }
 }

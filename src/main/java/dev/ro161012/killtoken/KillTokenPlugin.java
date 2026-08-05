@@ -2,7 +2,6 @@ package dev.ro161012.killtoken;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -36,7 +35,7 @@ public class KillTokenPlugin extends JavaPlugin {
     private static final String LEGACY_DEFAULT_TOKEN_LORE = "Awarded for slaying another player.";
     private static final String DEFAULT_KILLSTREAK_MESSAGE = "&c%player% &7is on a &6%streak% &7killstreak!";
     private static final String LEGACY_KILLSTREAK_MESSAGE = "&6Killstreak&8: &f%streak%";
-    private static final int MAX_KILLSTREAK_REWARD_TOKENS = 2304;
+    private static final int MAX_KILLSTREAK_TOKEN_MULTIPLIER = 5;
 
     private PairCooldown pairCooldown;
     private KillstreakTracker killstreakTracker;
@@ -52,9 +51,10 @@ public class KillTokenPlugin extends JavaPlugin {
     private boolean killstreakEnabled;
     private String killstreakMessage;
     private Sound killstreakSound;
-    private int killstreakRewardEvery;
-    private int killstreakRewardTokens;
-    private String killstreakRewardMessage;
+    private int killstreakAnnouncementMinimum;
+    private int killstreakRewardStart;
+    private int killstreakRewardStep;
+    private int killstreakMaxTokenMultiplier;
 
     @Override
     public void onEnable() {
@@ -157,17 +157,18 @@ public class KillTokenPlugin extends JavaPlugin {
         } catch (IllegalArgumentException e) {
             this.killstreakSound = Sound.ENTITY_EXPERIENCE_ORB_PICKUP;
         }
-        this.killstreakRewardEvery = Math.max(1, config.getInt("killstreak.reward-every", 3));
-        this.killstreakRewardTokens = Math.min(MAX_KILLSTREAK_REWARD_TOKENS,
-                Math.max(1, config.getInt("killstreak.reward-tokens", 2)));
-        this.killstreakRewardMessage = color(config.getString("killstreak.reward-message",
-                "&6+%amount% Kill Tokens &7for your &c%streak% &7killstreak!"));
+        this.killstreakAnnouncementMinimum = Math.max(1,
+                config.getInt("killstreak.announcement-minimum", 2));
+        this.killstreakRewardStart = Math.max(1, config.getInt("killstreak.reward-start", 3));
+        this.killstreakRewardStep = Math.max(1, config.getInt("killstreak.reward-step", 3));
+        this.killstreakMaxTokenMultiplier = Math.min(MAX_KILLSTREAK_TOKEN_MULTIPLIER,
+                Math.max(1, config.getInt("killstreak.max-token-multiplier", 5)));
     }
 
     /**
-     * Updates the old stock action-bar template and adds new reward settings
-     * to existing server configurations. Administrator-customized messages
-     * are preserved.
+     * Updates the old stock action-bar template and adds streak multiplier
+     * settings to existing server configurations. Administrator-customized
+     * messages are preserved.
      *
      * @param config current plugin configuration
      */
@@ -177,17 +178,20 @@ public class KillTokenPlugin extends JavaPlugin {
             config.set("killstreak.message", DEFAULT_KILLSTREAK_MESSAGE);
             changed = true;
         }
-        if (!config.contains("killstreak.reward-every")) {
-            config.set("killstreak.reward-every", 3);
+        if (!config.contains("killstreak.announcement-minimum")) {
+            config.set("killstreak.announcement-minimum", 2);
             changed = true;
         }
-        if (!config.contains("killstreak.reward-tokens")) {
-            config.set("killstreak.reward-tokens", 2);
+        if (!config.contains("killstreak.reward-start")) {
+            config.set("killstreak.reward-start", 3);
             changed = true;
         }
-        if (!config.contains("killstreak.reward-message")) {
-            config.set("killstreak.reward-message",
-                    "&6+%amount% Kill Tokens &7for your &c%streak% &7killstreak!");
+        if (!config.contains("killstreak.reward-step")) {
+            config.set("killstreak.reward-step", config.getInt("killstreak.reward-every", 3));
+            changed = true;
+        }
+        if (!config.contains("killstreak.max-token-multiplier")) {
+            config.set("killstreak.max-token-multiplier", 5);
             changed = true;
         }
         if (changed) {
@@ -308,8 +312,8 @@ public class KillTokenPlugin extends JavaPlugin {
     }
 
     /**
-     * Whether killstreak chat announcements, personal sounds, and milestone
-     * rewards are enabled.
+     * Whether killstreak chat announcements, personal sounds, and token
+     * multipliers are enabled.
      *
      * @return true if enabled
      */
@@ -338,41 +342,45 @@ public class KillTokenPlugin extends JavaPlugin {
     }
 
     /**
-     * Returns whether the supplied streak has earned a reward milestone.
+     * Returns whether a streak should be announced in chat and with a sound.
      *
      * @param streak current streak length
-     * @return true when rewards are enabled and the streak is a milestone
+     * @return true when announcements are enabled at this streak length
      */
-    public boolean shouldRewardKillstreak(final int streak) {
-        return killstreakEnabled && streak > 0 && streak % killstreakRewardEvery == 0;
+    public boolean shouldAnnounceKillstreak(final int streak) {
+        return killstreakEnabled && streak >= killstreakAnnouncementMinimum;
     }
 
     /**
-     * Gives the configured streak reward directly to the player's inventory.
-     * Any amount that does not fit is dropped at the player's feet.
+     * Returns the Kill Token multiplier for a streak. The multiplier starts
+     * at two on the configured reward-start streak and increases by one every
+     * reward-step kills, capped at the configured maximum.
      *
-     * @param player player receiving the reward
-     * @param streak streak length that earned the reward
+     * @param streak current streak length
+     * @return multiplier for the normal token drop, at least one
      */
-    public void rewardKillstreak(final Player player, final int streak) {
-        final Map<Integer, ItemStack> leftover = player.getInventory().addItem(
-                createToken(killstreakRewardTokens));
-        for (final ItemStack drop : leftover.values()) {
-            player.getWorld().dropItemNaturally(player.getLocation(), drop);
+    public int getKillstreakTokenMultiplier(final int streak) {
+        if (!killstreakEnabled || streak < killstreakRewardStart) {
+            return 1;
         }
 
-        if (!killstreakRewardMessage.isEmpty()) {
-            player.sendMessage(killstreakRewardMessage
-                    .replace("%amount%", String.valueOf(killstreakRewardTokens))
-                    .replace("%streak%", String.valueOf(streak)));
-        }
+        final int multiplier = 2 + (streak - killstreakRewardStart) / killstreakRewardStep;
+        return Math.min(killstreakMaxTokenMultiplier, multiplier);
     }
 
     /**
-     * Runs a safe preview of the configured reward milestone for an
-     * administrator. It broadcasts the chat announcement, plays the personal
-     * sound, and gives the configured bonus without changing a real streak,
-     * pair cooldown, or normal kill-token drop.
+     * Returns the token amount for a qualifying kill at the supplied streak.
+     *
+     * @param streak current streak length
+     * @return normal configured drop amount multiplied by the streak multiplier
+     */
+    public int getKillstreakTokenAmount(final int streak) {
+        return tokensPerKill * getKillstreakTokenMultiplier(streak);
+    }
+
+    /**
+     * Runs a safe preview of the chat announcements and multiplier drop for
+     * an administrator. It does not change a real streak or pair cooldown.
      *
      * @param player administrator running the preview
      * @return false when killstreaks are disabled
@@ -382,27 +390,31 @@ public class KillTokenPlugin extends JavaPlugin {
             return false;
         }
 
-        killstreakTracker.preview(player, killstreakRewardEvery);
-        rewardKillstreak(player, killstreakRewardEvery);
+        killstreakTracker.preview(player, killstreakAnnouncementMinimum);
+        if (killstreakRewardStart != killstreakAnnouncementMinimum) {
+            killstreakTracker.preview(player, killstreakRewardStart);
+        }
+        player.getWorld().dropItemNaturally(player.getLocation(),
+                createToken(getKillstreakTokenAmount(killstreakRewardStart)));
         return true;
     }
 
     /**
-     * Returns the number of qualifying kills between rewards.
+     * Returns the minimum streak announced to chat.
      *
-     * @return reward interval, always at least one
+     * @return announcement minimum, always at least one
      */
-    public int getKillstreakRewardEvery() {
-        return killstreakRewardEvery;
+    public int getKillstreakAnnouncementMinimum() {
+        return killstreakAnnouncementMinimum;
     }
 
     /**
-     * Returns the number of Kill Tokens given at a reward milestone.
+     * Returns the streak where token multiplication starts.
      *
-     * @return reward amount, between one and the configured safety cap
+     * @return reward start, always at least one
      */
-    public int getKillstreakRewardTokens() {
-        return killstreakRewardTokens;
+    public int getKillstreakRewardStart() {
+        return killstreakRewardStart;
     }
 
     /**
