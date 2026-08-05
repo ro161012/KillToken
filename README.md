@@ -101,7 +101,7 @@ cooldown-message: "&cNo Kill Token dropped - you and this player are on cooldown
 killstreak:
   enabled: true
   # %player% = killer name; %streak% = current streak length
-  message: "&c%player% &6is on a &e%streak% &ekillstreak!"
+  message: "&c%player% is on a %streak% killstreak!"
   sound: ENTITY_EXPERIENCE_ORB_PICKUP     # played only for the streak owner at pitch 1.0
   announcement-minimum: 2                 # no streak chat or sound at 1
   reward-start: 3                         # normal token drops become 2x here
